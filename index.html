@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RailMadad DRM">
+<meta name="theme-color" content="#0B1B2B">
+<title>RailMadad — DRM Howrah · Forensic Console</title>
+<style>
+:root{
+  --bg:#0B1B2B;--bg2:#0F2436;--panel:#13283B;--panel2:#17314A;--line:#23415C;
+  --gold:#C8A24B;--ink:#EAF1F8;--mut:#90A6BB;--mut2:#6f879d;
+  --red:#E0524A;--red-bg:#3a1d20;--amb:#E2992F;--amb-bg:#3a2e17;
+  --grn:#36A877;--grn-bg:#16321f;--juris:#4E97CE;--juris-bg:#16314a;--r:10px;
+}
+*{box-sizing:border-box} html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased;padding-bottom:env(safe-area-inset-bottom)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.eyebrow{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut2);font-weight:700}
+h1,h2,h3{margin:0;font-weight:700;letter-spacing:-.01em} a{color:var(--juris)}
+.app{display:flex;min-height:100vh}
+.rail{width:212px;flex:0 0 212px;background:linear-gradient(180deg,#0a1826,#0c1f31);border-right:1px solid var(--line);
+  padding:18px 12px;position:sticky;top:0;height:100vh;overflow:auto}
+.brand{display:flex;gap:10px;align-items:center;padding:4px 8px 16px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.brand .mark{width:34px;height:34px;border-radius:8px;background:var(--gold);color:#1a1408;display:grid;place-items:center;
+  font-weight:800;font-family:ui-monospace,monospace;flex:0 0 34px}
+.brand b{font-size:14px;display:block;line-height:1.1}
+.brand span{font-size:10.5px;color:var(--mut);letter-spacing:.12em;text-transform:uppercase}
+.nav button{width:100%;text-align:left;background:none;border:0;color:var(--mut);padding:9px 12px;border-radius:8px;
+  cursor:pointer;font-size:13.5px;font-weight:600;display:flex;gap:10px;align-items:center;margin-bottom:2px}
+.nav button .ic{width:18px;text-align:center;opacity:.85}
+.nav button:hover{background:var(--panel);color:var(--ink)}
+.nav button.on{background:var(--panel2);color:var(--ink);box-shadow:inset 2px 0 0 var(--gold)}
+.nav .flagcount{margin-left:auto;background:var(--red);color:#fff;font-size:10.5px;font-weight:800;border-radius:20px;
+  padding:1px 7px;min-width:20px;text-align:center}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:20;background:rgba(11,27,43,.92);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);padding:12px 20px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.topbar h2{font-size:16px} .topbar .sub{color:var(--mut);font-size:12px} .spacer{flex:1}
+.period{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.period button{background:none;border:0;color:var(--mut);padding:6px 11px;font-size:12px;font-weight:700;cursor:pointer}
+.period button.on{background:var(--gold);color:#1a1408}
+.srcpill{font-size:11px;color:var(--mut);border:1px solid var(--line);border-radius:20px;padding:4px 10px;cursor:pointer}
+.srcpill b{color:var(--gold)}
+.wrap{padding:18px 20px 60px;max-width:1320px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:13px 14px;position:relative;overflow:hidden}
+.kpi .v{font-size:25px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.kpi .l{font-size:11px;color:var(--mut);margin-top:5px;letter-spacing:.04em}
+.kpi .d{font-size:11px;margin-top:6px;font-weight:700}
+.kpi .accent{position:absolute;left:0;top:0;bottom:0;width:3px}
+.kpi.red .accent{background:var(--red)}.kpi.amb .accent{background:var(--amb)}.kpi.grn .accent{background:var(--grn)}
+.kpi.juris .accent{background:var(--juris)}.kpi.gold .accent{background:var(--gold)}
+.grid{display:grid;gap:14px} .g2{grid-template-columns:1fr 1fr} .g3{grid-template-columns:2fr 1fr}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:15px 16px}
+.panel h3{font-size:13.5px;margin-bottom:3px} .panel .note{font-size:11.5px;color:var(--mut);margin-bottom:13px}
+.panel.full{grid-column:1/-1}
+.bar{display:flex;align-items:center;gap:10px;margin:7px 0}
+.bar .lab{flex:0 0 148px;font-size:12px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .track{flex:1;background:var(--bg2);border-radius:5px;height:16px;overflow:hidden}
+.bar .fill{height:100%;border-radius:5px;min-width:2px}
+.bar .val{flex:0 0 auto;font-size:12px;color:var(--mut);font-family:ui-monospace,monospace;min-width:54px;text-align:right}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;color:var(--mut2);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;
+  padding:8px 10px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel)}
+td{padding:9px 10px;border-bottom:1px solid var(--bg2);vertical-align:top}
+tr.click{cursor:pointer} tr.click:hover td{background:var(--panel2)}
+.tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.04em;padding:2px 7px;border-radius:5px;white-space:nowrap}
+.t-red{background:var(--red-bg);color:#ffb3ad;border:1px solid #5e2b2e}
+.t-amb{background:var(--amb-bg);color:#ffd08a;border:1px solid #5e4a1e}
+.t-grn{background:var(--grn-bg);color:#9fe9c2;border:1px solid #245539}
+.t-juris{background:var(--juris-bg);color:#a9d4f3;border:1px solid #2c5675}
+.t-gray{background:#1d3146;color:var(--mut);border:1px solid var(--line)}
+.flagdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+.heat{display:grid;gap:4px}
+.heat .cell{border-radius:5px;padding:9px 6px;text-align:center;font-size:11px}
+.heat .hc{font-family:ui-monospace,monospace;font-weight:700}
+.scrim{position:fixed;inset:0;background:rgba(4,10,17,.6);backdrop-filter:blur(2px);z-index:60;display:none}
+.scrim.show{display:block}
+.drawer{position:fixed;top:0;right:0;height:100vh;width:min(560px,94vw);background:var(--bg2);border-left:1px solid var(--line);
+  z-index:70;transform:translateX(100%);transition:transform .22s ease;overflow:auto;padding:0}
+.drawer.show{transform:translateX(0)}
+.drawer .dh{position:sticky;top:0;background:var(--bg2);border-bottom:1px solid var(--line);padding:16px 18px;display:flex;gap:10px;align-items:flex-start}
+.drawer .dh .x{margin-left:auto;background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:8px;
+  width:32px;height:32px;cursor:pointer;font-size:16px;flex:0 0 32px}
+.drawer .db{padding:16px 18px}
+.kv{display:grid;grid-template-columns:128px 1fr;gap:6px 12px;font-size:12.5px;margin:10px 0}
+.kv dt{color:var(--mut2);text-transform:uppercase;letter-spacing:.06em;font-size:10.5px;padding-top:2px}
+.kv dd{margin:0;color:var(--ink);word-break:break-word}
+.block{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 13px;margin:11px 0}
+.block .bt{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut2);margin-bottom:6px;font-weight:700}
+.block p{margin:0;font-size:13px;line-height:1.5}
+.field{margin:11px 0}
+.field label{display:block;font-size:11.5px;color:var(--mut);margin-bottom:5px;letter-spacing:.04em}
+.field input{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:10px 12px;
+  font-size:13px;font-family:ui-monospace,monospace}
+.btn{background:var(--gold);color:#1a1408;border:0;border-radius:8px;padding:10px 16px;font-weight:800;cursor:pointer;font-size:13px}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--ink)}
+.search{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:12px 14px;
+  font-size:14px;margin-bottom:14px}
+.hint{font-size:11.5px;color:var(--mut2);line-height:1.5}
+.scroll{max-height:520px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.mtabs{display:none}
+@media(max-width:860px){
+  .rail{display:none} .g2,.g3{grid-template-columns:1fr} .bar .lab{flex-basis:108px}
+  .wrap{padding:14px 13px 80px} .topbar{padding:10px 13px}
+  .mtabs{display:flex;overflow:auto;gap:6px;position:sticky;top:0;z-index:20;background:var(--bg);padding:10px 13px;border-bottom:1px solid var(--line)}
+  .mtabs button{flex:0 0 auto;background:var(--panel);border:1px solid var(--line);color:var(--mut);padding:8px 13px;
+    border-radius:20px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap}
+  .mtabs button.on{background:var(--gold);color:#1a1408;border-color:var(--gold)}
+}
+@media(prefers-reduced-motion:reduce){.drawer{transition:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail">
+    <div class="brand"><div class="mark">HW</div><div><b>RailMadad</b><span>DRM · Howrah</span></div></div>
+    <nav class="nav" id="nav"></nav>
+  </aside>
+  <div class="main">
+    <div class="mtabs" id="mtabs"></div>
+    <div class="topbar">
+      <div><h2 id="viewTitle">Overview</h2><div class="sub" id="viewSub">—</div></div>
+      <div class="spacer"></div>
+      <div class="period" id="period">
+        <button data-d="7">7d</button><button data-d="14">14d</button>
+        <button data-d="30">30d</button><button data-d="0" class="on">All</button>
+      </div>
+      <div class="srcpill" onclick="go('source')">Source: <b id="srcName">Sample</b></div>
+    </div>
+    <div class="wrap" id="wrap"></div>
+  </div>
+</div>
+<div class="scrim" id="scrim" onclick="closeDrawer()"></div>
+<aside class="drawer" id="drawer"></aside>
+<script>
+/* ===== DETECTION CONFIG — tune freely ===== */
+const RULES={
+  fastCloseMins:10, repeatFilerThreshold:3,
+  // Corruption / bribery / overcharging / cheating / fraud
+  integrity:/bribe|bribery|corrupt|illegal gratification|under[\s-]?table|demanded? money|extra\s*(money|charge)|overcharg|excess\s*(fare|fine)|pay\s*&?\s*use|rail\s*neer|\bmrp\b|black[\s-]?tick|tatkal|cheat|fraud|fake\s*tick|forged|\bdalal\b|partiality|charged.*(₹|rs|\d)/i,
+  // Physical assault / manhandling
+  assault:/assault|beaten|beat me|hit me|manhandl|physically|attacked|slapped|thrash|molest/i,
+  // Theft / criminal
+  crime:/theft|snatch|stolen|stole|robbed|loot|pickpocket|missing\s*(bag|laptop|mobile|wallet|purse|phone|macbook)|laptop|macbook|knife|weapon|threat/i,
+  // Eunuch / begging / extortion nuisance (RPF)
+  eunuch:/eunuch|hijra|kinnar|chhakka|transgender|begging|beggar|extort/i,
+  // Unauthorised entry / intrusion
+  unauth:/unauthor|without ticket|trespass|outsider|intrusion|hawker|vendor in (the )?coach|reserved coach|ladies coach|disabled coach|divyang|\bslr\b/i,
+  // Sensitive law-and-order
+  sensitive:/border|illegal (cross|immigr)|smuggl|confidential|suspicious (person|group)|naxal|terror/i,
+  // Abusive / acute distress in passenger text
+  abuse:/\b(shit|bastard|bloody|idiot|nonsense|worthless|rubbish|motherf|fuck|stupid|incompetent)\b/i
+};
+const SERIOUS_CATS=['Security','Commercial','Unreserved Ticketing','Refunds'];
+let RAW=[],ROWS=[],VIEW='overview',PERIOD_DAYS=0,SRC='Sample';
+const VIEWS=[['overview','Overview','▦'],['flags','Red-flag register','⚑'],['sla','SLA & closure','⏱'],
+  ['jurisdiction','Jurisdiction','⇄'],['categories','Categories','◷'],['trains','Trains','▤'],
+  ['stations','Stations','⌂'],['timeofday','Time of day','◔'],['deepdive','Deep dive','⊞'],
+  ['trends','Trends & movers','↗'],['habitual','Habitual complainers','◉'],['search','Case search','⌕'],['source','Data source','⚙']];
+
+function parseDate(s){if(!s)return null;if(s instanceof Date)return s;s=String(s).trim();
+  let m=s.match(/^(\d{1,2})-(\d{1,2})-(\d{2,4})(?:\s+(\d{1,2}):(\d{1,2}))?/);
+  if(m){let y=+m[3];if(y<100)y+=2000;return new Date(y,+m[2]-1,+m[1],m[4]?+m[4]:0,m[5]?+m[5]:0);}
+  let d=new Date(s);return isNaN(d)?null:d;}
+function diffToMin(d){if(!d)return null;let m=String(d).match(/(\d+):(\d+)/);return m?(+m[1])*60+(+m[2]):null;}
+function enrich(r){
+  const created=parseDate(r.createdOn),cat=String(r.compTypeName||'—'),desc=(r.complaintDesc||'')+'',rem=(r.remarks||'')+'';
+  const o={...r,_created:created,_hour:created?created.getHours():null,_resMin:diffToMin(r.diff),
+    _closed:(r.status||'')==='Closed',_ownDiv:(r.ownDivCode||'').toUpperCase(),_isOwn:(r.ownDivCode||'').toUpperCase()==='HWH',
+    _slaBreach:!!(r.sla&&String(r.sla).toLowerCase()!=='no'&&String(r.sla).trim()!==''),
+    _cat:cat,_rating:(r.rating||'').trim(),_ts:(r.trainStation||'').toString(),_mode:r.complaintMode,_flags:[]};
+  const f=o._flags, st=(r.subTypeName||'');
+  if(RULES.crime.test(desc)||RULES.crime.test(st))f.push('crime');
+  if(RULES.assault.test(desc))f.push('assault');
+  if(RULES.integrity.test(desc)||RULES.integrity.test(st))f.push('integrity');
+  if(RULES.eunuch.test(desc))f.push('eunuch');
+  if(RULES.unauth.test(desc)||RULES.unauth.test(st)||/unauthorized person/i.test(st))f.push('unauth');
+  if(RULES.sensitive.test(desc))f.push('sensitive');
+  if(RULES.abuse.test(desc)||RULES.abuse.test(r.feedbackRemark||''))f.push('abuse');
+  if(o._closed&&o._resMin!=null&&o._resMin<RULES.fastCloseMins&&SERIOUS_CATS.some(c=>cat.toLowerCase().includes(c.toLowerCase())))f.push('fastclose');
+  if(o._rating==='Unsatisfactory')f.push('unsat');
+  if(!o._isOwn&&o._ownDiv)f.push('jurisdiction');
+  o._closure=classifyClosure(o,rem,r.feedbackRemark);
+  o._severe=f.some(x=>SEVERE.includes(x));
+  o._incomplete=!o._closed||(o._severe&&o._closure!=='resolved');
+  return o;}
+function classifyClosure(o,rem,fb){
+  if(!o._closed)return 'open';
+  rem=String(rem||'').toLowerCase();fb=String(fb||'').toLowerCase();
+  const deflect=/running (in|at) .*(division|kgp|ser)|lodge your complain|complain .*division|relayed .*(division|kgp|ser)|not in howrah division|kharagpur division|other division/;
+  const resolved=/attended|provided|cleaned|adjusted|replaced|changed|repaired|rectified|cleared|recovered|\bfir\b lodg|penalty|imposed|confirmed|solved|switched on|running now|temperature adjusted|net 2|fuse.*(replac|chang)|blanket|pillow/;
+  const posfb=/clean|solved|good service|quick response|thank|nice|resolved|problem solved/;
+  const pending=/enquiry|being conducted|atr to follow|will be intimated|matter (noted|inquired|is being)|under (enquiry|investigation)|noted (&|and) informed|grievance is noted|will be relayed|escalated to higher|intended/;
+  const generic=/we regret the inconvenience|forwarded to the concerned|operational constraints|acknowledged with thanks|deeply regret|congestion in the section|every possible action|necessary action/;
+  if(deflect.test(rem)||(!o._isOwn&&/division|lodge/.test(rem)))return 'deflected';
+  if(resolved.test(rem)||posfb.test(fb))return 'resolved';
+  if(pending.test(rem))return 'pending';
+  if(generic.test(rem))return 'generic';
+  if(rem.replace(/[^a-z]/g,'').length<8)return 'unclear';
+  return 'generic';}
+const CLOSURE_META={
+  resolved:{t:'RESOLVED',c:'t-grn'},deflected:{t:'DEFLECTED',c:'t-juris'},
+  pending:{t:'PENDING-AS-CLOSED',c:'t-red'},generic:{t:'GENERIC',c:'t-amb'},
+  unclear:{t:'UNCLEAR',c:'t-gray'},open:{t:'OPEN',c:'t-amb'}};
+function closureTag(c){const m=CLOSURE_META[c]||CLOSURE_META.unclear;return `<span class="tag ${m.c}">${m.t}</span>`;}
+function closureBanner(r){
+  const c=r._closure;
+  const txt={resolved:'RESOLVED — a specific action is recorded in the closure.',
+    deflected:'DEFLECTED to '+(r._ownDiv||'another division')+' — confirm the owning division actually acted; on paper it still counts here.',
+    pending:'PENDING SHOWN AS CLOSED — an enquiry or ATR was promised but no outcome is recorded.',
+    generic:'GENERIC CLOSURE — regret/forwarded language only; no specific action stated.',
+    unclear:'CLOSURE UNCLEAR — the remark is missing or too short to tell what was done.',
+    open:'OPEN — not yet closed.'}[c]||'';
+  const col={resolved:['var(--grn-bg)','#9fe9c2','#245539'],deflected:['var(--juris-bg)','#a9d4f3','#2c5675'],
+    pending:['var(--red-bg)','#ffb3ad','#5e2b2e'],generic:['var(--amb-bg)','#ffd08a','#5e4a1e'],
+    unclear:['#1d3146','#90A6BB','#23415C'],open:['var(--amb-bg)','#ffd08a','#5e4a1e']}[c]||['#1d3146','#90A6BB','#23415C'];
+  let h='';
+  if(r._severe&&c!=='resolved')
+    h+=`<div style="background:var(--red-bg);border:1px solid #5e2b2e;border-radius:8px;padding:11px 13px;margin-bottom:7px;color:#ffb3ad;font-weight:800;font-size:12.5px">⚑ INCOMPLETE — a serious case closed without evidenced action. Needs an evidence-based second-stage closure before you treat it as done.</div>`;
+  h+=`<div style="background:${col[0]};border:1px solid ${col[2]};border-radius:8px;padding:11px 13px;margin-bottom:6px;color:${col[1]};font-weight:700;font-size:12.5px">${txt}</div>`;
+  return h;}
+const FLAG_META={integrity:{t:'INTEGRITY/BRIBERY',c:'t-red'},assault:{t:'ASSAULT',c:'t-red'},crime:{t:'THEFT/CRIME',c:'t-red'},
+  eunuch:{t:'EUNUCH/BEGGING',c:'t-red'},unauth:{t:'UNAUTHORISED ENTRY',c:'t-red'},sensitive:{t:'LAW & ORDER',c:'t-red'},
+  fastclose:{t:'TOO-FAST CLOSE',c:'t-amb'},abuse:{t:'ABUSIVE/DISTRESS',c:'t-amb'},
+  unsat:{t:'UNSATISFACTORY',c:'t-amb'},jurisdiction:{t:'OTHER DIVISION',c:'t-juris'},repeat:{t:'REPEAT FILER',c:'t-gray'}};
+const SEVERE=['integrity','assault','crime','eunuch','unauth','sensitive'];
+
+function applyPeriod(){
+  let base=RAW.map(enrich);
+  if(PERIOD_DAYS>0){let maxD=null;base.forEach(r=>{if(r._created&&(!maxD||r._created>maxD))maxD=r._created;});
+    if(maxD){let cut=new Date(maxD.getTime()-PERIOD_DAYS*864e5);base=base.filter(r=>r._created&&r._created>=cut);}}
+  const byPhone={};base.forEach(r=>{if(r.contactId)byPhone[r.contactId]=(byPhone[r.contactId]||0)+1;});
+  base.forEach(r=>{if(r.contactId&&byPhone[r.contactId]>=RULES.repeatFilerThreshold)r._flags.push('repeat');});
+  ROWS=base;}
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pct=(n,d)=>d?Math.round(n/d*100):0;
+const fmtMin=m=>m==null?'—':(m<60?m+'m':(Math.floor(m/60)+'h'+String(m%60).padStart(2,'0')));
+function median(a){if(!a.length)return null;a=a.slice().sort((x,y)=>x-y);const i=Math.floor(a.length/2);return a.length%2?a[i]:(a[i-1]+a[i])/2;}
+function pctile(a,p){if(!a.length)return null;a=a.slice().sort((x,y)=>x-y);return a[Math.min(a.length-1,Math.floor(p/100*a.length))];}
+function countBy(rows,fn){const m={};rows.forEach(r=>{const k=fn(r);if(k==null||k==='')return;m[k]=(m[k]||0)+1;});return m;}
+function topEntries(o,n){return Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,n);}
+function bars(entries,total,color){const max=Math.max(1,...entries.map(e=>e[1]));
+  return entries.map(([k,v])=>{const col=typeof color==='function'?color(k,v):color;
+    return `<div class="bar"><div class="lab" title="${esc(k)}">${esc(k)}</div>
+    <div class="track"><div class="fill" style="width:${v/max*100}%;background:${col}"></div></div>
+    <div class="val">${v}${total?` · ${pct(v,total)}%`:''}</div></div>`;}).join('');}
+function kpi(v,l,d,cls){return `<div class="kpi ${cls||''}"><div class="accent"></div><div class="v">${v}</div>
+  <div class="l">${l}</div>${d?`<div class="d" style="color:var(--mut)">${d}</div>`:''}</div>`;}
+function catColor(k){k=k.toLowerCase();if(k.includes('security')||k.includes('commercial'))return 'var(--red)';
+  if(k.includes('punctual'))return 'var(--amb)';if(k.includes('clean')||k.includes('bed')||k.includes('water'))return 'var(--juris)';return 'var(--gold)';}
+function emptyRow(c){return `<tr><td colspan="${c}" style="color:var(--mut2);padding:22px;text-align:center">No cases in this window.</td></tr>`;}
+function ratingTag(r){if(!r)return '<span style="color:var(--mut2)">—</span>';
+  if(r==='Excellent'||r==='Satisfactory')return `<span class="tag t-grn">${esc(r.toUpperCase())}</span>`;
+  if(r==='Unsatisfactory')return '<span class="tag t-red">UNSATISFACTORY</span>';return `<span class="tag t-gray">${esc(r)}</span>`;}
+
+function render(){
+  applyPeriod();
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===VIEW));
+  document.querySelectorAll('#mtabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===VIEW));
+  const meta=VIEWS.find(v=>v[0]===VIEW);$('#viewTitle').textContent=meta?meta[1]:'';
+  $('#viewSub').textContent=`${ROWS.length.toLocaleString()} complaints · ${PERIOD_DAYS?`last ${PERIOD_DAYS} days`:'full history'} · source: ${SRC}`;
+  $('#srcName').textContent=SRC;
+  const n=ROWS.filter(r=>r._flags.some(f=>SEVERE.includes(f))).length;
+  document.querySelectorAll('[data-v="flags"] .flagcount').forEach(e=>e.textContent=n);
+  ({overview:vOverview,flags:vFlags,sla:vSla,jurisdiction:vJuris,categories:vCats,trains:vTrains,
+    stations:vStations,timeofday:vTime,deepdive:vDeepdive,trends:vTrends,drill:vDrill,
+    habitual:vHabitual,search:vSearch,source:vSource}[VIEW]||vOverview)();
+}
+
+function vOverview(){
+  const R=ROWS,n=R.length;
+  const days=new Set(R.map(r=>r._created?r._created.toDateString():null).filter(Boolean)).size||1;
+  const own=R.filter(r=>r._isOwn).length,other=n-own,res=R.filter(r=>r._resMin!=null).map(r=>r._resMin);
+  const breach=R.filter(r=>r._slaBreach).length,unsat=R.filter(r=>r._rating==='Unsatisfactory').length;
+  const rated=R.filter(r=>r._rating).length,distinct=new Set(R.map(r=>r.contactId).filter(Boolean)).size;
+  const severe=R.filter(r=>r._flags.some(f=>SEVERE.includes(f))).length;
+  const byDay=countBy(R,r=>r._created?`${String(r._created.getDate()).padStart(2,'0')}/${String(r._created.getMonth()+1).padStart(2,'0')}`:null);
+  const dayEntries=Object.entries(byDay).sort((a,b)=>a[0].localeCompare(b[0]));
+  const byCat=countBy(R,r=>r._cat);
+  const byChan=countBy(R,r=>({H:'Helpline 139',R:'RailMadad',A:'App',W:'WhatsApp',M:'Mobile',E:'Email/Web'}[r.channelType]||r.channelType||'—'));
+  $('#wrap').innerHTML=`
+  <div class="kpis">
+    ${kpi(n.toLocaleString(),'Total complaints',`${(n/days).toFixed(1)} / day`,'gold')}
+    ${kpi(own.toLocaleString(),'Howrah owns these',`${pct(own,n)}% of load`,'grn')}
+    ${kpi(other.toLocaleString(),'Other division',`${pct(other,n)}% merely registered here`,'juris')}
+    ${kpi(distinct.toLocaleString(),'Distinct complainants',`${(n/Math.max(1,distinct)).toFixed(2)} per person`,'')}
+    ${kpi(severe.toLocaleString(),'Red-flag cases','need evidence-based closure','red')}
+    ${kpi(pct(breach,n)+'%','SLA breached',`${breach} cases`,breach/Math.max(1,n)>0.1?'amb':'grn')}
+  </div>
+  <div class="grid g3">
+    <div class="panel"><h3>Daily load</h3><div class="note">Watch mid-week concentration — the practical control point.</div>
+      ${bars(dayEntries,0,(k,v)=>{const mx=Math.max(...dayEntries.map(e=>e[1]));return v>=mx?'var(--red)':v>=mx*0.9?'var(--amb)':'var(--juris)';})}</div>
+    <div class="panel"><h3>Resolution speed</h3><div class="note">Closed cases only.</div>
+      <div style="padding:6px 0"><div class="v" style="font-size:24px;font-weight:800">${fmtMin(median(res))}</div><div class="l" style="color:var(--mut)">Median time to close</div></div>
+      <div style="padding:6px 0"><div class="v" style="font-size:24px;font-weight:800">${fmtMin(pctile(res,90))}</div><div class="l" style="color:var(--mut)">90th-percentile (the tail that hurts)</div></div>
+      <div style="padding:6px 0"><div class="v" style="font-size:24px;font-weight:800;color:${unsat?'var(--amb)':'var(--ink)'}">${pct(unsat,rated)}%</div><div class="l" style="color:var(--mut)">Unsatisfactory (of ${rated} rated)</div></div></div>
+  </div>
+  <div class="grid g2" style="margin-top:14px">
+    <div class="panel"><h3>Category mix</h3><div class="note">Open Categories for sub-types & preventability.</div>${bars(topEntries(byCat,9),n,catColor)}</div>
+    <div class="panel"><h3>How complaints arrive</h3><div class="note">Channel mix shapes how fast you can respond.</div>${bars(topEntries(byChan,6),n,'var(--gold)')}</div>
+  </div>`;}
+
+function severityScore(r){let s=0;r._flags.forEach(f=>{if(['crime','integrity','assault','sensitive'].includes(f))s+=5;else if(SEVERE.includes(f))s+=4;else s+=1;});if(r._incomplete)s+=3;return s;}
+function rowFlagsHtml(r){return `<tr class="click" onclick='openCase(${JSON.stringify(r.complaintRefNo)})'>
+  <td class="mono">${esc(r.complaintRefNo)}</td>
+  <td>${r._flags.filter(f=>FLAG_META[f]).map(f=>`<span class="tag ${FLAG_META[f].c}">${FLAG_META[f].t}</span>`).join(' ')}</td>
+  <td class="mono">${esc(r._ts)}</td>
+  <td>${closureTag(r._closure)}${r._incomplete?' <span class="tag t-red">INCOMPLETE</span>':''}</td>
+  <td style="max-width:300px">${esc((r.complaintDesc||'').slice(0,140))}${(r.complaintDesc||'').length>140?'…':''}</td></tr>`;}
+function vFlags(){
+  const flagged=ROWS.filter(r=>r._severe).sort((a,b)=>severityScore(b)-severityScore(a));
+  const incomplete=flagged.filter(r=>r._incomplete).sort((a,b)=>severityScore(b)-severityScore(a));
+  const c={};SEVERE.forEach(f=>c[f]=ROWS.filter(r=>r._flags.includes(f)).length);
+  $('#wrap').innerHTML=`
+  <div class="kpis">
+    ${kpi(c.integrity||0,'Integrity / bribery','overcharge, cheating, fraud','red')}
+    ${kpi(c.crime||0,'Theft / criminal','','red')}
+    ${kpi(c.assault||0,'Assault','','red')}
+    ${kpi(c.eunuch||0,'Eunuch / begging','RPF nuisance','red')}
+    ${kpi(c.unauth||0,'Unauthorised entry','','red')}
+    ${kpi(c.sensitive||0,'Law & order','','red')}
+  </div>
+  <div class="panel full" style="border:1px solid #5e2b2e">
+    <h3 style="color:#ff9f99">⚑ Needs second-stage closure (${incomplete.length})</h3>
+    <div class="note">Serious cases that are <b>not</b> clearly resolved — open, deflected to another division, closed with a generic reply, or "enquiry/ATR to follow" with no recorded outcome. These should not be treated as complete. Tap for the case block.</div>
+    <div class="scroll"><table><thead><tr><th>Ref</th><th>Flags</th><th>Train/Stn</th><th>Closure</th><th>Description</th></tr></thead>
+    <tbody>${incomplete.map(rowFlagsHtml).join('')||emptyRow(5)}</tbody></table></div></div>
+  <div class="panel full" style="margin-top:14px"><h3>Full red-flag register (${flagged.length})</h3>
+    <div class="note">Every flagged case in this window, most serious first. The closure column tells you what was actually done.</div>
+    <div class="scroll"><table><thead><tr><th>Ref</th><th>Flags</th><th>Train/Stn</th><th>Closure</th><th>Description</th></tr></thead>
+    <tbody>${flagged.map(rowFlagsHtml).join('')||emptyRow(5)}</tbody></table></div></div>`;}
+
+function vSla(){
+  const R=ROWS,closed=R.filter(r=>r._closed),res=closed.filter(r=>r._resMin!=null).map(r=>r._resMin);
+  const dep={};R.forEach(r=>{const d=r.deptCode||'—';dep[d]=dep[d]||{n:0,b:0};dep[d].n++;if(r._slaBreach)dep[d].b++;});
+  const depEntries=Object.entries(dep).sort((a,b)=>b[1].b-a[1].b).map(([k,v])=>[`${k} (${v.b}/${v.n})`,v.b]);
+  const generic=closed.filter(r=>/we regret the inconvenience|forwarded to the concerned|matter noted|will be relayed|acknowledged with thanks|operational constraints/i.test(r.remarks||''));
+  const fast=closed.filter(r=>r._resMin!=null&&r._resMin<RULES.fastCloseMins);
+  const buckets={'<5 min':0,'5–15 min':0,'15–60 min':0,'1–2 h':0,'>2 h':0};
+  res.forEach(m=>{buckets[m<5?'<5 min':m<15?'5–15 min':m<60?'15–60 min':m<120?'1–2 h':'>2 h']++;});
+  $('#wrap').innerHTML=`
+  <div class="kpis">
+    ${kpi(fmtMin(median(res)),'Median close','','grn')}${kpi(fmtMin(pctile(res,90)),'p90 close','the slow tail','amb')}
+    ${kpi(pct(R.filter(r=>r._slaBreach).length,R.length)+'%','SLA breached','per the sla column','amb')}
+    ${kpi(pct(generic.length,closed.length)+'%','Generic ATR','templated closure text','red')}
+    ${kpi(fast.length,'Closed <'+RULES.fastCloseMins+'m','disposal ≠ resolution','red')}
+  </div>
+  <div class="grid g2">
+    <div class="panel"><h3>Closure-time distribution</h3><div class="note">A fast median can hide a long tail. The &lt;5-minute spike is mostly punctuality copy-paste.</div>
+      ${bars(Object.entries(buckets),closed.length,k=>k.includes('<5')?'var(--red)':k.includes('>2')?'var(--amb)':'var(--juris)')}</div>
+    <div class="panel"><h3>SLA breaches by department</h3><div class="note">Breached / total per department code.</div>${bars(depEntries,0,'var(--amb)')}</div>
+  </div>
+  <div class="panel full" style="margin-top:14px"><h3>Fast + templated closures to audit</h3>
+    <div class="note">Closed quickly with a generic reply. Fine for routine cases — not for integrity, crime or security.</div>
+    <div class="scroll"><table><thead><tr><th>Ref</th><th>Cat</th><th>Train/Stn</th><th>Close</th><th>ATR (closure remark)</th></tr></thead>
+    <tbody>${fast.slice(0,60).map(r=>`<tr class="click" onclick='openCase(${JSON.stringify(r.complaintRefNo)})'>
+      <td class="mono">${esc(r.complaintRefNo)}</td><td>${esc(r._cat)}</td><td class="mono">${esc(r._ts)}</td>
+      <td class="mono">${fmtMin(r._resMin)}</td><td style="max-width:380px">${esc((r.remarks||'').slice(0,140))}</td></tr>`).join('')||emptyRow(5)}</tbody></table></div></div>`;}
+
+function vJuris(){
+  const R=ROWS,n=R.length,own=R.filter(r=>r._isOwn),other=R.filter(r=>!r._isOwn&&r._ownDiv);
+  const byDiv=countBy(other,r=>r._ownDiv),byZone=countBy(other,r=>r.ownZoneCode||'—');
+  const leakTrains=topEntries(countBy(other,r=>`${r._ts} · ${(r.trainNameForReport||'').slice(0,24)}`),12);
+  $('#wrap').innerHTML=`
+  <div class="kpis">
+    ${kpi(pct(own.length,n)+'%','Genuinely Howrah','your accountable load','grn')}
+    ${kpi(pct(other.length,n)+'%','Other division','registered here, owned elsewhere','juris')}
+    ${kpi(Object.keys(byDiv).length,'Divisions leaking in','','')}
+  </div>
+  <div class="panel full"><h3>Why this matters</h3>
+    <div class="note">These complaints count in your raw totals but the train runs in another division (mostly KGP/SER and NF). Reading "own vs other" separately stops other divisions' delays from being scored as Howrah's failure — and tells you which interfaces to escalate.</div></div>
+  <div class="grid g2" style="margin-top:14px">
+    <div class="panel"><h3>Other-division load by owning division</h3>${bars(topEntries(byDiv,10),other.length,'var(--juris)')}</div>
+    <div class="panel"><h3>By owning zone</h3>${bars(topEntries(byZone,8),other.length,'var(--juris)')}</div>
+  </div>
+  <div class="panel full" style="margin-top:14px"><h3>Top trains generating other-division complaints</h3>
+    <div class="note">Candidates for a formal interface note to the owning division.</div>${bars(leakTrains,0,'var(--juris)')}</div>`;}
+
+function vCats(){
+  const R=ROWS,byCat=countBy(R,r=>r._cat),PREV=['Bed Roll','Coach - Cleanliness','Water Availability'];
+  const prevent=R.filter(r=>PREV.some(p=>r._cat.includes(p))).length,top=topEntries(byCat,1)[0];
+  const m={};R.forEach(r=>{const k=r._cat+'||'+(r.subTypeName||'—');m[k]=m[k]||{n:0,u:0,b:0};m[k].n++;if(r._rating==='Unsatisfactory')m[k].u++;if(r._slaBreach)m[k].b++;});
+  const rows=Object.entries(m).sort((a,b)=>b[1].n-a[1].n).slice(0,40).map(([k,v])=>{const[c,s]=k.split('||');
+    return `<tr class="click" onclick='drillInto(${JSON.stringify({cat:c,sub:s})})'>
+      <td><span class="flagdot" style="background:${catColor(c)}"></span>${esc(c)}</td><td>${esc(s)}</td>
+      <td class="mono">${v.n}</td><td class="mono" style="color:${v.u?'var(--amb)':'var(--mut2)'}">${v.u||'—'}</td>
+      <td class="mono" style="color:${v.b?'var(--red)':'var(--mut2)'}">${v.b||'—'}</td></tr>`;}).join('');
+  $('#wrap').innerHTML=`
+  <div class="kpis">
+    ${kpi(Object.keys(byCat).length,'Active categories','','')}
+    ${kpi(prevent,'Preventable comfort','bedroll/toilet/water → target zero','amb')}
+    ${kpi(top?top[1]:0,'Largest category',top?top[0]:'','red')}
+  </div>
+  <div class="panel full"><h3>Category × sub-type</h3><div class="note">Tap a row to see every case of that sub-type.</div>
+    <div class="scroll"><table><thead><tr><th>Category</th><th>Sub-type</th><th>Count</th><th>Unsat</th><th>SLA breach</th></tr></thead>
+    <tbody>${rows||emptyRow(5)}</tbody></table></div></div>`;}
+
+function vTrains(){
+  const R=ROWS.filter(r=>r._mode==='T'),grp={};
+  R.forEach(r=>{const t=r._ts;if(!t)return;grp[t]=grp[t]||{n:0,name:r.trainNameForReport||'',u:0,div:r._ownDiv,phones:new Set()};
+    grp[t].n++;if(r._rating==='Unsatisfactory')grp[t].u++;if(r.contactId)grp[t].phones.add(r.contactId);});
+  const entries=Object.entries(grp).sort((a,b)=>b[1].n-a[1].n).slice(0,30);
+  $('#wrap').innerHTML=`
+  <div class="kpis">
+    ${kpi(Object.keys(grp).length,'Trains with complaints','','')}
+    ${kpi(entries.filter(e=>e[1].n>=5).length,'Watch-list (≥5)','recurring pattern','amb')}
+    ${kpi(entries[0]?entries[0][1].n:0,'Worst single train',entries[0]?entries[0][0]:'','red')}
+  </div>
+  <div class="panel full"><h3>Train watch-list</h3>
+    <div class="note">"Distinct" = unique complainants — a high count from few people is a serial filer, not a trend. Tap to drill in.</div>
+    <div class="scroll"><table><thead><tr><th>Train</th><th>Name</th><th>Owner</th><th>Complaints</th><th>Distinct</th><th>Unsat</th></tr></thead>
+    <tbody>${entries.map(([t,v])=>`<tr class="click" onclick='filterSearch(${JSON.stringify(t)})'>
+      <td class="mono">${esc(t)}</td><td style="max-width:230px">${esc((v.name||'').slice(0,34))}</td>
+      <td>${v.div&&v.div!=='HWH'?`<span class="tag t-juris">${esc(v.div)}</span>`:'<span class="tag t-grn">HWH</span>'}</td>
+      <td class="mono">${v.n}</td><td class="mono" style="color:${v.phones.size<v.n*0.5?'var(--amb)':'var(--ink)'}">${v.phones.size}</td>
+      <td class="mono" style="color:${v.u?'var(--amb)':'var(--mut2)'}">${v.u||'—'}</td></tr>`).join('')||emptyRow(6)}</tbody></table></div></div>`;}
+
+function vStations(){
+  const R=ROWS.filter(r=>r._mode==='S'),grp={},RED=['HWH','BWN'];
+  R.forEach(r=>{const s=r._ts||'—';grp[s]=grp[s]||{n:0,types:{}};grp[s].n++;grp[s].types[r._cat]=(grp[s].types[r._cat]||0)+1;});
+  const entries=Object.entries(grp).sort((a,b)=>b[1].n-a[1].n).slice(0,25);
+  $('#wrap').innerHTML=`
+  <div class="kpis">
+    ${kpi(R.length,'Station complaints','vs train complaints','')}
+    ${kpi(entries.filter(e=>RED.includes(e[0])).reduce((a,e)=>a+e[1].n,0),'At HWH + BWN','high-visibility nodes','red')}
+  </div>
+  <div class="panel full"><h3>Station heat</h3><div class="note">Station complaints are fewer but each is seen by thousands. Tap to see the cases.</div>
+    <div class="scroll"><table><thead><tr><th>Station</th><th>Flag</th><th>Count</th><th>Dominant issues</th></tr></thead>
+    <tbody>${entries.map(([s,v])=>`<tr class="click" onclick='filterSearch(${JSON.stringify(s)})'>
+      <td class="mono">${esc(s)}</td><td>${RED.includes(s)?'<span class="tag t-red">RED</span>':v.n>=3?'<span class="tag t-amb">WATCH</span>':'<span class="tag t-gray">—</span>'}</td>
+      <td class="mono">${v.n}</td><td>${topEntries(v.types,3).map(([k,c])=>`${esc(k)} <span style="color:var(--mut2)">(${c})</span>`).join(', ')}</td></tr>`).join('')||emptyRow(4)}</tbody></table></div></div>`;}
+
+function vTime(){
+  const bands=[['00–06',0,6],['06–10',6,10],['10–16',10,16],['16–22',16,22],['22–24',22,24]];
+  const cats=topEntries(countBy(ROWS,r=>r._cat),5).map(e=>e[0]),grid={};
+  bands.forEach(b=>{grid[b[0]]={_t:0};cats.forEach(c=>grid[b[0]][c]=0);});
+  ROWS.forEach(r=>{if(r._hour==null)return;const b=bands.find(b=>r._hour>=b[1]&&r._hour<b[2]);if(!b)return;grid[b[0]]._t++;if(cats.includes(r._cat))grid[b[0]][r._cat]++;});
+  const mx=Math.max(1,...bands.flatMap(b=>cats.map(c=>grid[b[0]][c])));
+  const cell=v=>`background:rgba(224,82,74,${0.10+v/mx*0.7});`;
+  $('#wrap').innerHTML=`
+  <div class="panel full"><h3>When complaints land — band × category</h3>
+    <div class="note">06–10 is the office/exam band where delays hurt most; 00–06 night cases need a more human reply.</div>
+    <div class="heat" style="grid-template-columns:92px repeat(${cats.length},1fr)">
+      <div class="cell"></div>${cats.map(c=>`<div class="cell hc" style="color:var(--mut)">${esc(c.split(' ')[0])}</div>`).join('')}
+      ${bands.map(b=>`<div class="cell hc" style="background:var(--panel2)">${b[0]}<br><span style="color:var(--mut);font-size:10px">${grid[b[0]]._t} total</span></div>
+        ${cats.map(c=>`<div class="cell hc" style="${cell(grid[b[0]][c])}">${grid[b[0]][c]||''}</div>`).join('')}`).join('')}
+    </div></div>`;}
+
+let SEARCH_Q='';
+function filterSearch(q){SEARCH_Q=q;VIEW='search';render();}
+function vSearch(){
+  const q=SEARCH_Q.toLowerCase();let res=ROWS;
+  if(q)res=ROWS.filter(r=>[r.complaintRefNo,r._ts,r.contactId,r.complaintDesc,r.remarks,r.feedbackRemark,r.trainNameForReport,r.subTypeName,r._cat].some(v=>String(v||'').toLowerCase().includes(q)));
+  $('#wrap').innerHTML=`
+    <input class="search" id="sq" placeholder="Search ref, train, station, mobile, or any text in description / ATR / feedback…" value="${esc(SEARCH_Q)}">
+    <div class="hint" style="margin-bottom:12px">${res.length.toLocaleString()} match${res.length===1?'':'es'}${q?` for "${esc(SEARCH_Q)}"`:''}. Tap a case for the full block.</div>
+    <div class="scroll"><table><thead><tr><th>Ref</th><th>When</th><th>Train/Stn</th><th>Type</th><th>Status</th><th>Rating</th></tr></thead>
+    <tbody>${res.slice(0,200).map(r=>`<tr class="click" onclick='openCase(${JSON.stringify(r.complaintRefNo)})'>
+      <td class="mono">${esc(r.complaintRefNo)}</td><td class="mono" style="white-space:nowrap">${esc((r.createdOn||'').toString().slice(0,14))}</td>
+      <td class="mono">${esc(r._ts)}</td><td>${esc(r.subTypeName||r._cat)}</td>
+      <td>${r._closed?'<span class="tag t-grn">CLOSED</span>':'<span class="tag t-amb">'+esc((r.status||'OPEN').toUpperCase())+'</span>'}</td>
+      <td>${ratingTag(r._rating)}</td></tr>`).join('')||emptyRow(6)}</tbody></table></div>`;
+  const inp=$('#sq');inp.addEventListener('input',e=>{SEARCH_Q=e.target.value;clearTimeout(window._st);window._st=setTimeout(vSearch,180);});if(q)inp.focus();}
+
+function openCase(ref){
+  const all=RAW.map(enrich);const r=ROWS.find(x=>String(x.complaintRefNo)===String(ref))||all.find(x=>String(x.complaintRefNo)===String(ref));if(!r)return;
+  const flags=r._flags.filter(f=>FLAG_META[f]).map(f=>`<span class="tag ${FLAG_META[f].c}">${FLAG_META[f].t}</span>`).join(' ');
+  $('#drawer').innerHTML=`
+    <div class="dh"><div><div class="eyebrow">Case block</div>
+      <h2 class="mono" style="font-size:18px;margin-top:3px">${esc(r.complaintRefNo)}</h2>
+      <div style="margin-top:7px">${flags||'<span class="tag t-gray">no auto-flag</span>'}</div></div>
+      <button class="x" onclick="closeDrawer()">✕</button></div>
+    <div class="db">
+      <dl class="kv">
+        <dt>Registered</dt><dd class="mono">${esc(r.createdOn)}</dd>
+        <dt>Closed/updated</dt><dd class="mono">${esc(r.modifiedOn||'—')} ${r._resMin!=null?`· ${fmtMin(r._resMin)}`:''}</dd>
+        <dt>Status</dt><dd>${esc(r.status||'—')} ${r._slaBreach?'<span class="tag t-amb">SLA '+esc(r.sla)+'</span>':''}</dd>
+        <dt>Closure</dt><dd>${closureTag(r._closure)} ${r._incomplete?'<span class="tag t-red">INCOMPLETE</span>':''}</dd>
+        <dt>Category</dt><dd>${esc(r._cat)} › ${esc(r.subTypeName||'—')}</dd>
+        <dt>Train / Station</dt><dd class="mono">${esc(r._ts)} ${r.trainNameForReport?'· '+esc(r.trainNameForReport):''}</dd>
+        <dt>Coach / berth</dt><dd class="mono">${esc(r.coachType||'—')} ${esc(r.coachNo||'')}</dd>
+        <dt>Department</dt><dd>${esc(r.deptCode||'—')} · handler ${esc(r.userId||'—')}</dd>
+        <dt>Jurisdiction</dt><dd>${r._isOwn?'<span class="tag t-grn">HOWRAH</span>':'<span class="tag t-juris">'+esc(r._ownDiv||'?')+' / '+esc(r.ownZoneCode||'')+'</span>'}</dd>
+        <dt>Channel</dt><dd>${esc(r.channelType||'—')} · forwarded ${esc(r.forwarded||'0')}×</dd>
+        <dt>Complainant</dt><dd class="mono">${esc(r.contactId||'—')}</dd>
+        <dt>Rating</dt><dd>${ratingTag(r._rating)}</dd>
+      </dl>
+      <div class="block"><div class="bt">Passenger complaint</div><p>${esc(r.complaintDesc||'—')}</p></div>
+      ${closureBanner(r)}
+      <div class="block"><div class="bt">Action taken / ATR (closure remark)</div><p>${esc(r.remarks||'—')}</p></div>
+      ${r.feedbackRemark?`<div class="block"><div class="bt">Passenger feedback</div><p>${esc(r.feedbackRemark)}</p></div>`:''}
+    </div>`;
+  $('#drawer').classList.add('show');$('#scrim').classList.add('show');}
+function closeDrawer(){$('#drawer').classList.remove('show');$('#scrim').classList.remove('show');}
+
+function vSource(){
+  const cfg=loadCfg();
+  $('#wrap').innerHTML=`
+  <div class="grid g2">
+    <div class="panel"><h3>Connect your live history</h3>
+      <div class="note">Paste the API URL + token from the "RailMadad → Show API URL + token" menu in your Master History sheet. This pulls your full archive (more than 7 days once it accrues).</div>
+      <div class="field"><label>API URL (Apps Script /exec)</label><input id="apiUrl" placeholder="https://script.google.com/macros/s/…/exec" value="${esc(cfg.url||'')}"></div>
+      <div class="field"><label>Token</label><input id="apiTok" placeholder="24-char token" value="${esc(cfg.tok||'')}"></div>
+      <button class="btn" onclick="connectApi()">Connect &amp; load</button><span id="apiMsg" class="hint" style="margin-left:10px"></span></div>
+    <div class="panel"><h3>Or load a CSV</h3>
+      <div class="note">Zero-setup path: in the source sheet do File → Download → CSV, then drop it here. Good for a one-off deep dive before the archiver runs.</div>
+      <div class="field"><label>Choose CSV file</label><input type="file" id="csvFile" accept=".csv" style="font-family:inherit"></div>
+      <button class="btn ghost" onclick="loadSampleData()">Reset to sample data</button></div>
+  </div>
+  <div class="panel full" style="margin-top:14px"><h3>Tuning the lens</h3>
+    <div class="note">Current detection thresholds (edit the RULES block in this file to change permanently):</div>
+    <dl class="kv"><dt>Fast-close flag</dt><dd>serious case closed under <b>${RULES.fastCloseMins} minutes</b></dd>
+      <dt>Repeat filer</dt><dd>same mobile filing <b>≥ ${RULES.repeatFilerThreshold}</b> times in the window</dd>
+      <dt>Serious categories</dt><dd>${SERIOUS_CATS.join(', ')}</dd></dl></div>`;
+  $('#csvFile').addEventListener('change',handleCsv);}
+function connectApi(){
+  const url=$('#apiUrl').value.trim(),tok=$('#apiTok').value.trim();
+  if(!url){$('#apiMsg').textContent='Enter the API URL.';return;}
+  saveCfg({url,tok});$('#apiMsg').textContent='Loading…';
+  fetch(url+(url.includes('?')?'&':'?')+'token='+encodeURIComponent(tok)+'&limit=50000')
+    .then(r=>r.json()).then(d=>{if(!d.ok){$('#apiMsg').textContent='Error: '+(d.error||'unknown');return;}
+      RAW=(d.rows||[]).map(coerceRow);SRC='Live archive ('+d.count+')';VIEW='overview';render();})
+    .catch(e=>{$('#apiMsg').textContent='Fetch failed: '+e+' — check the deployment is accessible to "Anyone".';});}
+function handleCsv(e){const f=e.target.files[0];if(!f)return;const rd=new FileReader();
+  rd.onload=()=>{RAW=parseCsv(rd.result);SRC='CSV ('+RAW.length+')';VIEW='overview';render();};rd.readAsText(f);}
+function parseCsv(txt){const rows=[];let i=0,field='',row=[],q=false;
+  while(i<txt.length){const c=txt[i];
+    if(q){if(c==='"'){if(txt[i+1]==='"'){field+='"';i++;}else q=false;}else field+=c;}
+    else{if(c==='"')q=true;else if(c===','){row.push(field);field='';}
+      else if(c==='\n'||c==='\r'){if(field!==''||row.length){row.push(field);rows.push(row);row=[];field='';}if(c==='\r'&&txt[i+1]==='\n')i++;}else field+=c;}i++;}
+  if(field!==''||row.length){row.push(field);rows.push(row);}
+  if(!rows.length)return[];const head=rows[0].map(h=>h.trim());
+  return rows.slice(1).filter(r=>r.length>1).map(r=>{const o={};head.forEach((h,j)=>o[h]=r[j]);return o;});}
+function saveCfg(c){try{localStorage.setItem('rmcfg',JSON.stringify(c));}catch(e){}}
+function loadCfg(){try{return JSON.parse(localStorage.getItem('rmcfg')||'{}');}catch(e){return{};}}
+function coerceRow(r){const o={};for(const k in r){const v=r[k];
+  o[k]=(v===null||v===undefined)?'':(v instanceof Date?v.toISOString():(typeof v==='object'?JSON.stringify(v):(typeof v==='number'?String(v):v)));}
+  return o;}
+
+/* ============================ THEME ENGINE ============================ */
+/* Curated themes per complaint family + emergent-term detection for whatever
+   is NOT yet in a bucket — so the lens adapts as the nature of complaints shifts. */
+const THEME_LIB={
+  bedroll:[
+    ['Blanket not provided',/blanket/i],['Pillow missing',/pillow/i],
+    ['Bedsheet / linen issue',/bed\s?sheet|linen|\bsheet/i],
+    ['Nothing provided / unavailable',/not (available|provided|given)|unavailable|no bed\s?roll|without bed/i],
+    ['Soiled / dirty linen',/dirty|soil|stain|unclean|smell/i],
+    ['Wayside boarding not covered',/wayside|midway|after boarding|boarded (at|from)|from .*station/i],
+    ['Attendant not contactable',/attendant|no one|not (found|available)|contact/i]],
+  cleanliness:[
+    ['Toilet dirty',/toilet|washroom|lavatory|wash basin|\blav\b/i],
+    ['Cockroach / rodents / pest',/cockroach|roach|\brat|rodent|insect|pest/i],
+    ['Seat / interior / floor dirty',/seat|interior|berth|floor|dirt near/i],
+    ['Toilet locked / choked',/lock|chok|block|not available/i],
+    ['Smell / unhygienic',/smell|stink|unhygienic|foul/i],
+    ['Water spillage',/spill|wet floor|water on/i]],
+  electrical:[
+    ['AC not working',/ac not|not cooling|a\/c not|ac.*(off|dead|fail|malfunction)/i],
+    ['AC cooling level',/less cooling|more cooling|not cooling enough|insufficient|high temp|too (hot|cold)/i],
+    ['Charging point',/charg/i],['Fan',/\bfan/i],['Lights',/light/i],
+    ['Lift / escalator',/escalat|lift/i],['Fuse / power / supply',/fuse|trip|mcb|rcbo|power|supply|cesc/i]],
+  punctuality:[
+    ['Daily / chronic lateness',/every ?day|daily|always late|routine|chronic|each day/i],
+    ['Outer / signal detention',/outer|signal|held|hold|stopped|standing|waiting near/i],
+    ['Missed connection / duty / exam',/connect|miss|duty|office|exam|interview/i],
+    ['Copy-paste reply grievance',/copy ?paste|same reply|template|no accountability|no action/i],
+    ['No prior intimation',/notif|intimation|inform|message|announce/i]],
+  security:[
+    ['Unauthorized in reserved/ladies/divyang',/unauthor|ladies coach|disabled|divyang|\bslr\b|reserved coach/i],
+    ['Theft / snatching',/theft|snatch|stolen|missing|robbed|loot/i],
+    ['Overcrowding',/crowd|over ?crowd|no space|without ticket|waiting passenger/i],
+    ['Harassment / misbehaviour / assault',/misbehav|harass|assault|molest|abuse/i],
+    ['Sensitive / law-and-order',/border|illegal|smuggl|confidential|suspicious/i]],
+  commercial:[
+    ['Pay & Use overcharge',/pay ?& ?use|toilet.*₹|₹.*toilet/i],
+    ['Water / Rail Neer overcharge',/rail ?neer|water.*₹|\bmrp\b|local brand/i],
+    ['Tatkal / black-ticketing',/tatkal|black.?tick|partiality/i],
+    ['Excess fare / fine',/excess|\bfine\b|extra (money|charge)|₹\d{3,}/i],
+    ['Parking overcharge',/parking/i],
+    ['Counter / QR / staff behaviour',/\bqr\b|counter|rude|behav|staff/i]],
+  water:[
+    ['No water (basin/toilet)',/no water|wash basin|\bbasin|toilet/i],
+    ['Dirty / hot water',/dirty|hot water|not drinkable|unclean/i],
+    ['Vending machine / tap fault',/machine|\bwvm\b|vending|\btap/i]],
+  default:[]
+};
+function famKey(cat){cat=(cat||'').toLowerCase();
+  if(cat.includes('bed roll'))return 'bedroll';
+  if(cat.includes('clean'))return 'cleanliness';
+  if(cat.includes('electrical'))return 'electrical';
+  if(cat.includes('punctual'))return 'punctuality';
+  if(cat.includes('security'))return 'security';
+  if(cat.includes('commercial')||cat.includes('ticketing'))return 'commercial';
+  if(cat.includes('water'))return 'water';
+  return 'default';}
+const STOP=new Set(('the a an and or to of in is are was were be been being for on at by with from this that it i we you he she they not no my our your me but if then so as out up off very just also are has have had will would can could should not their there here what which who whom how when where why all any each more most other some such than too only own same who train coach please sir madam complaint passenger railway station howrah hwh time today day running issue problem kindly thank thanks regret inconvenience').split(' '));
+function tokenize(t){return (t||'').toLowerCase().replace(/[^a-z0-9₹ ]/g,' ').split(/\s+/).filter(w=>w&&w.length>2&&!STOP.has(w)&&!/^\d+$/.test(w));}
+function extractThemes(rows){
+  const fam=famKey(rows.length?rows[0]._cat:'');
+  const lib=THEME_LIB[fam]||[];
+  const themes=lib.map(([label,re])=>({label,re,count:0,examples:[]}));
+  const uncategorized=[];
+  rows.forEach(r=>{const blob=(r.complaintDesc||'')+' '+(r.subTypeName||'');let hit=false;
+    themes.forEach(t=>{if(t.re.test(blob)){t.count++;if(t.examples.length<4)t.examples.push(r.complaintRefNo);hit=true;}});
+    if(!hit)uncategorized.push(r);});
+  return {fam,themes:themes.filter(t=>t.count>0).sort((a,b)=>b.count-a.count),uncategorized};
+}
+function emergingTerms(rows,famThemeWords){
+  const freq={};
+  rows.forEach(r=>{const toks=tokenize((r.complaintDesc||'')+' '+(r.subTypeName||''));
+    const uni=new Set(toks);uni.forEach(w=>{if(!famThemeWords.has(w))freq[w]=(freq[w]||0)+1;});
+    for(let i=0;i<toks.length-1;i++){const bg=toks[i]+' '+toks[i+1];freq[bg]=(freq[bg]||0)+1;}});
+  return Object.entries(freq).filter(([k,v])=>v>=2).sort((a,b)=>b[1]-a[1]).slice(0,14);
+}
+
+/* ============================ DRILL-DOWN ============================ */
+let DRILL={cat:null,sub:null,theme:null};
+function drillInto(o){DRILL={cat:o.cat||null,sub:o.sub||null,theme:null};VIEW='drill';closeDrawer();render();window.scrollTo(0,0);}
+function setTheme(label,reSrc){DRILL.theme=DRILL.theme&&DRILL.theme.label===label?null:{label,re:new RegExp(reSrc,'i')};render();}
+function drillRows(){
+  let R=ROWS;
+  if(DRILL.cat)R=R.filter(r=>r._cat===DRILL.cat);
+  if(DRILL.sub)R=R.filter(r=>(r.subTypeName||'—')===DRILL.sub);
+  if(DRILL.theme)R=R.filter(r=>DRILL.theme.re.test((r.complaintDesc||'')+' '+(r.subTypeName||'')));
+  return R;}
+function vDeepdive(){
+  const byCat=countBy(ROWS,r=>r._cat);
+  $('#wrap').innerHTML=`
+  <div class="panel full"><h3>Deep dive — pick a stream</h3>
+    <div class="note">Choose a category to break it into sub-types, then into what the complaint text is actually pointing to. Bedroll, cleanliness, electrical, security and commercial have tuned theme libraries.</div>
+    ${bars(topEntries(byCat,14).map(([k,v])=>[k,v]),ROWS.length,catColor)}
+    <div style="margin-top:12px">${topEntries(byCat,14).map(([k])=>`<button class="btn ghost" style="margin:4px 6px 0 0" onclick='drillInto(${JSON.stringify({cat:k})})'>${esc(k)} →</button>`).join('')}</div>
+  </div>`;}
+function vDrill(){
+  const R=drillRows(),base=DRILL.cat?ROWS.filter(r=>r._cat===DRILL.cat):ROWS;
+  const {themes,uncategorized}=extractThemes(DRILL.sub?base.filter(r=>(r.subTypeName||'—')===DRILL.sub):base);
+  const themeWords=new Set();themes.forEach(t=>tokenize(t.label).forEach(w=>themeWords.add(w)));
+  const emerg=emergingTerms((DRILL.sub?base.filter(r=>(r.subTypeName||'—')===DRILL.sub):base),themeWords);
+  const subBreak=DRILL.cat&&!DRILL.sub?topEntries(countBy(base,r=>r.subTypeName||'—'),12):null;
+  const res=R.filter(r=>r._resMin!=null).map(r=>r._resMin);
+  const unsat=R.filter(r=>r._rating==='Unsatisfactory').length,rated=R.filter(r=>r._rating).length;
+  const crumb=['All',DRILL.cat,DRILL.sub].filter(Boolean);
+  $('#wrap').innerHTML=`
+  <div style="margin-bottom:12px;font-size:12px;color:var(--mut)">
+    ${crumb.map((c,i)=>`<span style="${i===0?'cursor:pointer;color:var(--juris)':''}" ${i===0?'onclick="goDeep()"':''}>${esc(c)}</span>`).join(' <span style="color:var(--mut2)">›</span> ')}
+    ${DRILL.theme?` <span style="color:var(--mut2)">›</span> <span class="tag t-amb">${esc(DRILL.theme.label)} ✕</span>`:''}
+  </div>
+  <div class="kpis">
+    ${kpi(R.length,'Cases in scope','','gold')}
+    ${kpi(new Set(R.map(r=>r.contactId).filter(Boolean)).size,'Distinct complainants','','')}
+    ${kpi(fmtMin(median(res)),'Median close','','grn')}
+    ${kpi(pct(unsat,rated)+'%','Unsatisfactory',`of ${rated} rated`,unsat?'amb':'grn')}
+  </div>
+  ${subBreak?`<div class="panel full" style="margin-bottom:14px"><h3>Sub-types in ${esc(DRILL.cat)}</h3>
+     <div class="note">Tap to narrow.</div>${subBreak.map(([s,v])=>`<div class="bar"><div class="lab click" style="color:var(--juris);cursor:pointer" onclick='drillInto(${JSON.stringify({cat:DRILL.cat,sub:s})})' title="${esc(s)}">${esc(s)} →</div><div class="track"><div class="fill" style="width:${v/subBreak[0][1]*100}%;background:var(--gold)"></div></div><div class="val">${v}</div></div>`).join('')}</div>`:''}
+  <div class="grid g2">
+    <div class="panel"><h3>What these complaints point to</h3>
+      <div class="note">Automatic theme analysis of the complaint text${DRILL.theme?` · filtered to "${esc(DRILL.theme.label)}"`:''}. Tap a theme to filter the case list below.</div>
+      ${themes.length?themes.map(t=>`<div class="bar"><div class="lab click" style="cursor:pointer;${DRILL.theme&&DRILL.theme.label===t.label?'color:var(--gold)':''}" onclick='setTheme(${JSON.stringify(t.label)},${JSON.stringify(t.re.source)})' title="${esc(t.label)}">${esc(t.label)}</div><div class="track"><div class="fill" style="width:${t.count/themes[0].count*100}%;background:${catColor(DRILL.cat||'')}"></div></div><div class="val">${t.count}</div></div>`).join(''):'<div class="hint">No tuned themes for this stream — see emerging terms.</div>'}
+      ${uncategorized.length?`<div class="hint" style="margin-top:8px">${uncategorized.length} case(s) didn't match any known theme — captured under emerging terms.</div>`:''}
+    </div>
+    <div class="panel"><h3>Emerging terms <span class="tag t-juris">DYNAMIC</span></h3>
+      <div class="note">Recurring words/phrases not in any predefined bucket — this is where a new kind of complaint shows up first.</div>
+      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:6px">
+        ${emerg.length?emerg.map(([k,v])=>`<span class="tag t-gray" style="cursor:pointer" onclick='filterSearch(${JSON.stringify(k)})'>${esc(k)} · ${v}</span>`).join(''):'<span class="hint">Not enough text yet — populates as volume grows.</span>'}
+      </div>
+    </div>
+  </div>
+  <div class="panel full" style="margin-top:14px">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <h3 style="margin:0">AI briefing</h3>
+      <button class="btn" onclick="aiBriefing('drill')">Generate AI briefing</button>
+      <span class="hint">Narrative read of these cases — emerging issues, what's worsening, the standout case, suggested action.</span>
+    </div>
+    <div id="aiOut" style="margin-top:12px"></div>
+  </div>
+  <div class="panel full" style="margin-top:14px"><h3>Cases (${R.length})</h3>
+    <div class="scroll"><table><thead><tr><th>Ref</th><th>Sub-type</th><th>Train/Stn</th><th>Close</th><th>Rating</th><th>Description</th></tr></thead>
+    <tbody>${R.slice(0,150).map(r=>`<tr class="click" onclick='openCase(${JSON.stringify(r.complaintRefNo)})'>
+      <td class="mono">${esc(r.complaintRefNo)}</td><td>${esc(r.subTypeName||'—')}</td><td class="mono">${esc(r._ts)}</td>
+      <td class="mono">${r._closed?fmtMin(r._resMin):'<span class="tag t-gray">OPEN</span>'}</td><td>${ratingTag(r._rating)}</td>
+      <td style="max-width:320px">${esc((r.complaintDesc||'').slice(0,130))}${(r.complaintDesc||'').length>130?'…':''}</td></tr>`).join('')||emptyRow(6)}</tbody></table></div></div>`;}
+
+/* ============================ TRENDS / MOVERS ============================ */
+function periodSplit(){
+  const dated=ROWS.filter(r=>r._created);if(!dated.length)return null;
+  let mn=dated[0]._created,mx=dated[0]._created;
+  dated.forEach(r=>{if(r._created<mn)mn=r._created;if(r._created>mx)mx=r._created;});
+  const spanDays=Math.max(1,Math.round((mx-mn)/864e5));
+  const half=Math.max(1,Math.ceil(spanDays/2));
+  const recentCut=new Date(mx.getTime()-half*864e5+1);
+  const priorCut=new Date(recentCut.getTime()-half*864e5);
+  const recent=dated.filter(r=>r._created>=recentCut);
+  const prior=dated.filter(r=>r._created>=priorCut&&r._created<recentCut);
+  return {recent,prior,half,spanDays};}
+function movers(recent,prior,keyFn){
+  const a=countBy(recent,keyFn),b=countBy(prior,keyFn),keys=new Set([...Object.keys(a),...Object.keys(b)]);
+  const out=[];keys.forEach(k=>{const rv=a[k]||0,pv=b[k]||0;out.push({k,rv,pv,d:rv-pv});});
+  return out;}
+function vTrends(){
+  const ps=periodSplit();
+  if(!ps||ps.spanDays<2){$('#wrap').innerHTML=`<div class="panel full"><h3>Trends &amp; movers</h3>
+    <div class="note">This view compares the most recent period against the one before it. Your current data spans a single period, so there's nothing to compare yet — it activates once the archiver has banked at least two periods of history (a few days in). The engine is ready; it just needs depth.</div></div>`;return;}
+  const {recent,prior,half}=ps;
+  const catMov=movers(recent,prior,r=>r._cat).sort((a,b)=>b.d-a.d);
+  const subMov=movers(recent,prior,r=>r.subTypeName||'—').filter(m=>m.rv+m.pv>=2).sort((a,b)=>b.d-a.d);
+  const det=catMov.filter(m=>m.d>0).slice(0,8),imp=catMov.filter(m=>m.d<0).slice(0,8).reverse();
+  const ru=pct(recent.filter(r=>r._rating==='Unsatisfactory').length,recent.filter(r=>r._rating).length);
+  const pu=pct(prior.filter(r=>r._rating==='Unsatisfactory').length,prior.filter(r=>r._rating).length);
+  const rc=median(recent.filter(r=>r._resMin!=null).map(r=>r._resMin)),pc=median(prior.filter(r=>r._resMin!=null).map(r=>r._resMin));
+  const rb=pct(recent.filter(r=>r._slaBreach).length,recent.length),pb=pct(prior.filter(r=>r._slaBreach).length,prior.length);
+  const recentTerms=new Set(emergingTerms(recent,new Set()).map(e=>e[0]));
+  const priorTerms=new Set(emergingTerms(prior,new Set()).map(e=>e[0]));
+  const newThemes=[...recentTerms].filter(t=>!priorTerms.has(t)).slice(0,12);
+  const delta=(r,p,inv)=>{const d=r-p;const good=inv?d<0:d<0;return `<span style="color:${d===0?'var(--mut)':good?'var(--grn)':'var(--red)'};font-weight:700">${d>0?'+':''}${d}${inv?'':''}</span>`;};
+  $('#wrap').innerHTML=`
+  <div class="note" style="margin-bottom:12px">Comparing the last <b>${half} day(s)</b> against the previous ${half}. Green = improving, red = deteriorating.</div>
+  <div class="kpis">
+    ${kpi(recent.length,'Volume (recent)',`prev ${prior.length} · ${delta(recent.length,prior.length).replace(/<[^>]+>/g,'')}`,recent.length>prior.length?'amb':'grn')}
+    ${kpi(ru+'%','Unsatisfactory',`prev ${pu}%`,ru>pu?'red':'grn')}
+    ${kpi(fmtMin(rc),'Median close',`prev ${fmtMin(pc)}`,(rc||0)>(pc||0)?'amb':'grn')}
+    ${kpi(rb+'%','SLA breach',`prev ${pb}%`,rb>pb?'amb':'grn')}
+  </div>
+  <div class="grid g2">
+    <div class="panel"><h3 style="color:#ff9f99">Deteriorating</h3><div class="note">Categories rising vs the previous period.</div>
+      ${det.length?det.map(m=>`<div class="bar"><div class="lab" title="${esc(m.k)}">${esc(m.k)}</div><div class="track"><div class="fill" style="width:${Math.min(100,m.d*18)}%;background:var(--red)"></div></div><div class="val">+${m.d} (${m.pv}→${m.rv})</div></div>`).join(''):'<div class="hint">Nothing rising — good.</div>'}</div>
+    <div class="panel"><h3 style="color:#9fe9c2">Improving</h3><div class="note">Categories falling vs the previous period.</div>
+      ${imp.length?imp.map(m=>`<div class="bar"><div class="lab" title="${esc(m.k)}">${esc(m.k)}</div><div class="track"><div class="fill" style="width:${Math.min(100,-m.d*18)}%;background:var(--grn)"></div></div><div class="val">${m.d} (${m.pv}→${m.rv})</div></div>`).join(''):'<div class="hint">Nothing falling yet.</div>'}</div>
+  </div>
+  <div class="panel full" style="margin-top:14px"><h3>Sub-type movers</h3>
+    <div class="scroll"><table><thead><tr><th>Sub-type</th><th>Prev</th><th>Recent</th><th>Change</th></tr></thead>
+    <tbody>${subMov.slice(0,30).map(m=>`<tr class="click" onclick='filterSearch(${JSON.stringify(m.k)})'><td>${esc(m.k)}</td><td class="mono">${m.pv}</td><td class="mono">${m.rv}</td><td class="mono" style="color:${m.d>0?'var(--red)':m.d<0?'var(--grn)':'var(--mut)'}">${m.d>0?'+':''}${m.d}</td></tr>`).join('')||emptyRow(4)}</tbody></table></div></div>
+  <div class="panel full" style="margin-top:14px"><h3>Newly emerging terms <span class="tag t-juris">DYNAMIC</span></h3>
+    <div class="note">Phrases appearing in the recent period that weren't recurring before — early warning of a changing complaint pattern.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:6px">${newThemes.length?newThemes.map(t=>`<span class="tag t-amb" style="cursor:pointer" onclick='filterSearch(${JSON.stringify(t)})'>${esc(t)}</span>`).join(''):'<span class="hint">None — pattern is stable.</span>'}</div></div>
+  <div class="panel full" style="margin-top:14px">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h3 style="margin:0">AI trend briefing</h3>
+      <button class="btn" onclick="aiBriefing('trend')">Generate AI briefing</button></div>
+    <div id="aiOut" style="margin-top:12px"></div></div>`;}
+
+/* ============================ AI BRIEFING ============================ */
+function aiCfg(){const c=loadCfg();return {url:c.aiUrl||'',tok:c.aiTok||c.tok||''};}
+function buildPrompt(mode){
+  let rows,scope;
+  if(mode==='trend'){const ps=periodSplit();rows=ps?ps.recent:ROWS;scope='recent-period complaints for Howrah Division';}
+  else{rows=drillRows();scope=[DRILL.cat,DRILL.sub].filter(Boolean).join(' / ')||'selected complaints';}
+  const sample=rows.slice(0,80).map(r=>`• [${r.subTypeName||r._cat}] ${(r.complaintDesc||'').slice(0,180)}${r._rating?` (rating: ${r._rating})`:''}`).join('\n');
+  const cats=topEntries(countBy(rows,r=>r.subTypeName||r._cat),8).map(e=>`${e[0]}: ${e[1]}`).join(', ');
+  return `You are an analyst supporting the DRM of Howrah Division, Indian Railways, reviewing RailMadad passenger complaints. Scope: ${scope}. Total ${rows.length} cases. Sub-type mix: ${cats}.\n\nComplaint texts (sample):\n${sample}\n\nGive a tight operational briefing in plain text (no markdown headings, max ~220 words) covering: (1) the dominant underlying themes — what the complaints actually point to; (2) anything emerging or unusual worth early attention; (3) the single most serious case and why; (4) three concrete, specific actions for the responsible branch. Be direct and evidence-based; avoid generic advice.`;
+}
+async function aiBriefing(mode){
+  const out=document.getElementById('aiOut');if(!out)return;
+  const cfg=aiCfg();
+  if(!cfg.url){
+    out.innerHTML=`<div class="block"><div class="bt">Connect ChatGPT</div>
+      <p class="hint">The briefing runs through your ChatGPT (OpenAI) proxy so your API key stays server-side, off this device. Deploy the RailMadad AI Proxy script, then paste its URL + token here.</p>
+      <div class="field"><label>ChatGPT proxy URL</label><input id="aiUrl" placeholder="https://script.google.com/macros/s/…/exec" value="${esc(cfg.url)}"></div>
+      <div class="field"><label>Token</label><input id="aiTok" placeholder="token" value="${esc(cfg.tok)}"></div>
+      <button class="btn" onclick="(function(){const c=loadCfg();c.aiUrl=document.getElementById('aiUrl').value.trim();c.aiTok=document.getElementById('aiTok').value.trim();saveCfg(c);aiBriefing('${mode}');})()">Save &amp; generate</button></div>`;
+    return;}
+  out.innerHTML='<div class="hint">Asking ChatGPT…</div>';
+  try{
+    const r=await fetch(cfg.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:cfg.tok,prompt:buildPrompt(mode)})});
+    const d=await r.json();if(!d.ok)throw new Error(d.error||'proxy error');
+    out.innerHTML=`<div class="block"><div class="bt">ChatGPT · briefing</div><p style="white-space:pre-wrap">${esc(d.text||'')}</p></div>`;
+  }catch(e){out.innerHTML=`<div class="block"><div class="bt">Briefing failed</div><p class="hint">${esc(String(e))} — check the proxy is deployed with access "Anyone" and the token matches.</p></div>`;}
+}
+
+function vHabitual(){
+  const g={};
+  ROWS.forEach(r=>{const p=r.contactId;if(!p)return;
+    (g[p]=g[p]||{n:0,tr:new Set(),ct:new Set(),sub:{},unsat:0,sev:0});
+    const o=g[p];o.n++;if(r._ts)o.tr.add(r._ts);o.ct.add(r._cat);
+    const s=r.subTypeName||'—';o.sub[s]=(o.sub[s]||0)+1;
+    if(r._rating==='Unsatisfactory')o.unsat++;if(r._severe)o.sev++;});
+  const arr=Object.entries(g).map(([p,o])=>({p,n:o.n,tr:o.tr.size,ct:o.ct.size,unsat:o.unsat,sev:o.sev,
+    topSub:Object.entries(o.sub).sort((a,b)=>b[1]-a[1])[0]})).filter(x=>x.n>=2).sort((a,b)=>b.n-a.n);
+  const distinct=new Set(ROWS.map(r=>r.contactId).filter(Boolean)).size;
+  const habit=arr.filter(x=>x.n>=RULES.repeatFilerThreshold);
+  const habitLoad=habit.reduce((a,x)=>a+x.n,0);
+  function profile(x){
+    if(x.n>=RULES.repeatFilerThreshold&&x.sev>0)return ['Frequent — raises serious issues','t-red'];
+    if(x.n>=RULES.repeatFilerThreshold&&x.tr<=1&&x.ct<=1)return ['Single-train repeater','t-amb'];
+    if(x.n>=RULES.repeatFilerThreshold&&x.ct<=1)return ['Single-topic repeater','t-amb'];
+    if(x.n>=RULES.repeatFilerThreshold)return ['Broad frequent filer','t-juris'];
+    return ['Occasional','t-gray'];}
+  $('#wrap').innerHTML=`
+  <div class="kpis">
+    ${kpi(distinct.toLocaleString(),'Distinct complainants','','')}
+    ${kpi(habit.length,'Habitual (≥'+RULES.repeatFilerThreshold+')','filing repeatedly','amb')}
+    ${kpi(pct(habitLoad,ROWS.length)+'%','Load from habituals','share of all complaints',habitLoad/Math.max(1,ROWS.length)>0.15?'red':'grn')}
+    ${kpi(arr[0]?arr[0].n:0,'Top single filer',arr[0]?arr[0].p:'','red')}
+  </div>
+  <div class="panel full"><h3>Habitual complainers</h3>
+    <div class="note">Separates raw volume from distinct voice. A "single-train repeater" inflates one train's count single-handedly; a filer marked "raises serious issues" is a watchdog worth heeding. Tap a row to read all their cases.</div>
+    <div class="scroll"><table><thead><tr><th>Complainant</th><th>Cases</th><th>Trains</th><th>Topics</th><th>Most-filed</th><th>Unsat</th><th>Serious</th><th>Profile</th></tr></thead>
+    <tbody>${arr.slice(0,60).map(x=>{const p=profile(x);return `<tr class="click" onclick='filterSearch(${JSON.stringify(x.p)})'>
+      <td class="mono">${esc(x.p)}</td><td class="mono">${x.n}</td><td class="mono">${x.tr}</td><td class="mono">${x.ct}</td>
+      <td>${esc(x.topSub?x.topSub[0]:'—')} <span style="color:var(--mut2)">(${x.topSub?x.topSub[1]:0})</span></td>
+      <td class="mono" style="color:${x.unsat?'var(--amb)':'var(--mut2)'}">${x.unsat||'—'}</td>
+      <td class="mono" style="color:${x.sev?'var(--red)':'var(--mut2)'}">${x.sev||'—'}</td>
+      <td><span class="tag ${p[1]}">${p[0]}</span></td></tr>`;}).join('')||emptyRow(8)}</tbody></table></div></div>`;}
+
+function go(v){VIEW=v;closeDrawer();render();window.scrollTo(0,0);}
+function goDeep(){go('deepdive');}
+function buildNav(){
+  $('#nav').innerHTML=VIEWS.map(v=>`<button data-v="${v[0]}" onclick="go('${v[0]}')"><span class="ic">${v[2]}</span>${v[1]}${v[0]==='flags'?'<span class="flagcount">0</span>':''}</button>`).join('');
+  $('#mtabs').innerHTML=VIEWS.map(v=>`<button data-v="${v[0]}" onclick="go('${v[0]}')">${v[1]}</button>`).join('');
+  document.querySelectorAll('#period button').forEach(b=>b.addEventListener('click',()=>{
+    PERIOD_DAYS=+b.dataset.d;document.querySelectorAll('#period button').forEach(x=>x.classList.remove('on'));b.classList.add('on');render();}));}
+function loadSampleData(){RAW=SAMPLE.slice();SRC='Sample';VIEW='overview';render();}
+
+/* ===== REAL SAMPLE — live extract, Howrah Division (30 May–05 Jun 2026) ===== */
+const SAMPLE=[
+{complaintRefNo:"2026060413937",createdOn:"04-06-26 23:59",complaintMode:"T",trainStation:"13009",channelType:"H",compTypeName:"Security",subTypeName:"Others",ownZoneCode:"ER",deptCode:"RPF",sla:"No",rating:"",status:"Registered",diff:"",ownDivCode:"HWH",trainNameForReport:"HWH YNRK DOON EXP",complaintDesc:"Complaint place not 13009 given at train sir, General coach. NEED RPF HELP SIR.",remarks:"Registered..",contactId:"9000000001",userId:"rpf_er_hwh"},
+{complaintRefNo:"2026060413708",createdOn:"04-06-26 23:21",modifiedOn:"05-06-26 00:10",complaintMode:"T",trainStation:"13042",channelType:"H",compTypeName:"Coach - Cleanliness",subTypeName:"Toilet",ownZoneCode:"ER",deptCode:"CNW",sla:"No",rating:"",status:"Registered",diff:"",ownDivCode:"HWH",coachType:"3A",coachNo:"15",trainNameForReport:"JAT HWH HIMGRI EXPRESS",complaintDesc:"The toilet in my coach is extremely dirty and unhygienic.",remarks:"Registered..",contactId:"9000000002",userId:"cnw_er_hwh"},
+{complaintRefNo:"2026060413499",createdOn:"04-06-26 23:04",complaintMode:"T",trainStation:"13023",channelType:"A",compTypeName:"Coach - Cleanliness",subTypeName:"Cockroach / Rodents",ownZoneCode:"ER",deptCode:"CNW",sla:"No",rating:"",status:"Registered",diff:"",ownDivCode:"HWH",coachType:"3A",coachNo:"63",trainNameForReport:"HWH-GAYA EXP",complaintDesc:"Very huge quantities of cockroaches in coach, however accepting a safe journey from railways.",remarks:"Registered..",contactId:"9000000003",userId:"cnw_er_hwh"},
+{complaintRefNo:"2026060411917",createdOn:"04-06-26 21:04",modifiedOn:"04-06-26 22:30",complaintMode:"S",trainStation:"HWH",channelType:"E",compTypeName:"Water Availability",subTypeName:"Water Vending Machines",ownZoneCode:"ER",deptCode:"ENG",sla:"No",rating:"",status:"Forwarded",diff:"",ownDivCode:"HWH",forwarded:"1",complaintDesc:"Many water machines on Howrah PF 19 are not functioning properly, creating water unavailability in this summer, and the tap was dirty.",remarks:"Kindly look into the matter",contactId:"9000000004",userId:"srden_er_hwh"},
+{complaintRefNo:"2026060413701",createdOn:"04-06-26 23:21",modifiedOn:"04-06-26 23:43",complaintMode:"T",trainStation:"03029",channelType:"A",compTypeName:"Electrical Equipment",subTypeName:"AC not working",ownZoneCode:"ER",deptCode:"ELE",sla:"No",rating:"",status:"Closed",diff:"0:21",ownDivCode:"HWH",coachType:"3A",coachNo:"38",trainNameForReport:"HWH-RGD SUMR SPL [TOD]",complaintDesc:"The AC is not working properly in my coach. Everyone is suffocating.",remarks:"Temperature adjusted from 24.8°C to 23.6°C.",contactId:"9000000005",userId:"ele_er_hwh"},
+{complaintRefNo:"2026060412911",createdOn:"04-06-26 22:19",modifiedOn:"04-06-26 22:40",complaintMode:"T",trainStation:"13034",channelType:"R",compTypeName:"Security",subTypeName:"Unauthorized person in Ladies/Disabled Coach/SLR/Reserve Coach",ownZoneCode:"ER",deptCode:"RPF",sla:"No",rating:"",status:"Closed",diff:"0:20",ownDivCode:"HWH",forwarded:"1",trainNameForReport:"KIR-HWH EXPRESS",complaintDesc:"Divyangjan coach occupied by other persons, please look into this sir.",remarks:"Complainant noticed unauthorized persons in the coach reserved for differently-abled passengers. Forwarded to RPF officials of Katwa for necessary action.",contactId:"9000000006",userId:"rpf_er_hwh"},
+{complaintRefNo:"2026060412952",createdOn:"04-06-26 22:23",modifiedOn:"04-06-26 22:36",complaintMode:"T",trainStation:"13048",channelType:"H",compTypeName:"Coach - Cleanliness",subTypeName:"Toilet",ownZoneCode:"ER",deptCode:"CNW",sla:"No",rating:"Excellent",status:"Closed",diff:"0:13",ownDivCode:"HWH",coachType:"SL",coachNo:"69",feedbackRemark:"Its cleaned",trainNameForReport:"PRRB HWH BIBHUTI EXPRESS",complaintDesc:"The toilet in my coach is extremely dirty.",remarks:"OBHS staff have attended to your complaint. You and our staff have confirmed.",contactId:"9000000007",userId:"cnw_er_hwh"},
+{complaintRefNo:"2026060411968",createdOn:"04-06-26 21:08",modifiedOn:"04-06-26 22:21",complaintMode:"T",trainStation:"15646",channelType:"R",compTypeName:"Security",subTypeName:"Unauthorized person in Ladies/Disabled Coach/SLR/Reserve Coach",ownZoneCode:"NF",deptCode:"CML",sla:"No",rating:"",status:"Closed",diff:"1:13",ownDivCode:"LMG",forwarded:"2",coachType:"SL",coachNo:"55",trainNameForReport:"SCL-CHZ EXPRESS",complaintDesc:"Travelling in 15646 from Malda, S7 coach extremely crowded with waiting/without-ticket passengers. We paid for seat, security and space. Please manage this crowd.",remarks:"Enroute TC informed to attend the said coach. RPF assistance will be provided to clear unauthorized passengers.",contactId:"9000000008",userId:"cml_er_hwh"},
+{complaintRefNo:"2026060412491",createdOn:"04-06-26 21:45",modifiedOn:"04-06-26 22:13",complaintMode:"T",trainStation:"12302",channelType:"W",compTypeName:"Bed Roll",subTypeName:"Others",ownZoneCode:"ER",deptCode:"CNW",sla:"No",rating:"",status:"Closed",diff:"0:27",ownDivCode:"HWH",coachType:"3A",coachNo:"46",trainNameForReport:"NDLS HWH RAJDHANI EXPRESS",complaintDesc:"Blanket is not available. Please provide one.",remarks:"Our staff has attended and provided a blanket. You and the linen attendant have confirmed the same.",contactId:"9000000009",userId:"cnw_er_hwh"},
+{complaintRefNo:"2026060411949",createdOn:"04-06-26 21:06",modifiedOn:"04-06-26 21:56",complaintMode:"T",trainStation:"13031",channelType:"M",compTypeName:"Punctuality",subTypeName:"Late Running",ownZoneCode:"ER",deptCode:"CHG",sla:"No",rating:"Unsatisfactory",status:"Closed",diff:"0:49",ownDivCode:"HWH",feedbackRemark:"It’s daily routine",trainNameForReport:"HWH-JYG EXP",complaintDesc:"13031 runs too late daily but nobody takes any action. Is there no one to listen to daily passengers?",remarks:"We regret the inconvenience. The issue has been forwarded to the concerned authorities for immediate action.",contactId:"9000000010",userId:"chg_er_hwh"},
+{complaintRefNo:"2026060411753",createdOn:"04-06-26 20:52",modifiedOn:"04-06-26 21:56",complaintMode:"T",trainStation:"36087",channelType:"R",compTypeName:"Punctuality",subTypeName:"Late Running",ownZoneCode:"ER",deptCode:"CHG",sla:"No",rating:"",status:"Closed",diff:"1:4",ownDivCode:"HWH",trainNameForReport:"HWH-MSAE LOCAL [SUBURBAN]",complaintDesc:"We are tired of receiving the same copy paste replies while punctuality continues to deteriorate. Every day thousands travel without certainty of when they will reach.",remarks:"We regret the inconvenience. The issue has been forwarded to the concerned authorities for immediate action.",contactId:"9000000011",userId:"chg_er_hwh"},
+{complaintRefNo:"2026060411704",createdOn:"04-06-26 20:48",modifiedOn:"04-06-26 20:49",complaintMode:"T",trainStation:"36087",channelType:"R",compTypeName:"Punctuality",subTypeName:"Late Running",ownZoneCode:"ER",deptCode:"CHG",sla:"No",rating:"",status:"Closed",diff:"0:1",ownDivCode:"HWH",trainNameForReport:"HWH-MSAE LOCAL [SUBURBAN]",complaintDesc:"When trains are abnormally delayed every single day it is no longer unavoidable - it is a systemic failure. Passengers are tired of copy paste replies.",remarks:"We regret the inconvenience. The issue has been forwarded to the concerned authorities for immediate action.",contactId:"9000000011",userId:"chg_er_hwh"},
+{complaintRefNo:"2026060411326",createdOn:"04-06-26 20:23",modifiedOn:"04-06-26 20:39",complaintMode:"T",trainStation:"36087",channelType:"R",compTypeName:"Punctuality",subTypeName:"Late Running",ownZoneCode:"ER",deptCode:"CHG",sla:"No",rating:"",status:"Closed",diff:"0:16",ownDivCode:"HWH",trainNameForReport:"HWH-MSAE LOCAL [SUBURBAN]",complaintDesc:"Indian Railways is playing with the lives, time and trust of millions of passengers every day. Despite thousands of complaints there is no accountability.",remarks:"Delay due to multiple operational constraints. The matter will be looked into.",contactId:"9000000011",userId:"chg_er_hwh"},
+{complaintRefNo:"2026060411113",createdOn:"04-06-26 20:07",modifiedOn:"04-06-26 20:19",complaintMode:"T",trainStation:"36848",channelType:"A",compTypeName:"Punctuality",subTypeName:"Late Running",ownZoneCode:"ER",deptCode:"CHG",sla:"No",rating:"Unsatisfactory",status:"Closed",diff:"0:11",ownDivCode:"HWH",feedbackRemark:"You don't take any action. You are worthless",trainNameForReport:"BWN-HWH (CHORD) LOCAL [SUBURBAN]",complaintDesc:"The train is running late by more than 45 minutes.",remarks:"We regret the inconvenience. The issue has been forwarded to the concerned authorities for immediate action.",contactId:"9000000012",userId:"chg_er_hwh"},
+{complaintRefNo:"2026060411251",createdOn:"04-06-26 20:16",modifiedOn:"04-06-26 20:21",complaintMode:"T",trainStation:"13018",channelType:"W",compTypeName:"Punctuality",subTypeName:"Late Running",ownZoneCode:"ER",deptCode:"CHG",sla:"No",rating:"Unsatisfactory",status:"Closed",diff:"0:4",ownDivCode:"HWH",feedbackRemark:"This is the obvious answer I can get. There's no accountability at all.",trainNameForReport:"AZ HWH GANADEVTA EXP",complaintDesc:"My journey is for just 3 hours but the train is late by 3 hours. I have night duty but unable to join. Many passengers will miss connecting trains out of state.",remarks:"Delay due to multiple operational constraints. The matter will be looked into.",contactId:"9000000013",userId:"chg_er_hwh"},
+{complaintRefNo:"2026060410296",createdOn:"04-06-26 19:07",modifiedOn:"04-06-26 19:46",complaintMode:"T",trainStation:"12339",channelType:"H",compTypeName:"Security",subTypeName:"Theft of Passengers Belongings/Snatching",ownZoneCode:"ER",deptCode:"RPF",sla:"No",rating:"",status:"Closed",diff:"0:39",ownDivCode:"HWH",forwarded:"2",trainNameForReport:"HWH DHN COALFIELD EXPRESS",complaintDesc:"Someone snatched my belongings — a laptop bag — around the Howrah departure window.",remarks:"Complainant kept her black JIS College bag with a laptop on the luggage rack in Coach D-1, Seat 74. About two minutes before departure she noticed the bag missing. No CCTV inside the coach. Advised to lodge FIR at GRPS/Dhanbad. Forwarded to RPF Howrah Central, CIB/Howrah and SRP Control Room.",contactId:"9000000014",userId:"rpf_er_hwh"},
+{complaintRefNo:"2026060409467",createdOn:"04-06-26 18:00",modifiedOn:"04-06-26 19:40",complaintMode:"T",trainStation:"15646",channelType:"W",compTypeName:"Security",subTypeName:"Unauthorized person in Ladies/Disabled Coach/SLR/Reserve Coach",ownZoneCode:"NF",deptCode:"CML",sla:"No",rating:"",status:"Closed",diff:"1:39",ownDivCode:"LMG",forwarded:"5",coachType:"SL",coachNo:"67",trainNameForReport:"SCL-CHZ EXPRESS",complaintDesc:"A group of around 17 people boarded from Assam and told me they had illegally crossed the Bangladesh border and are travelling towards Hyderabad. Please verify their documents. Keep my identity confidential.",remarks:"Talked with complainant and learnt that his matter has been resolved hence the matter has been closed. Thank you for using Rail Madad.",contactId:"9000000015",userId:"cml_er_hwh"},
+{complaintRefNo:"2026060410369",createdOn:"04-06-26 19:13",modifiedOn:"04-06-26 19:17",complaintMode:"T",trainStation:"20872",channelType:"W",compTypeName:"Punctuality",subTypeName:"Late Running",ownZoneCode:"SE",deptCode:"CHG",sla:"No",rating:"",status:"Closed",diff:"0:3",ownDivCode:"KGP",coachType:"CC",coachNo:"14",trainNameForReport:"ROU-HWH VANDE BHARAT EXP",complaintDesc:"Train is more than one hour late.",remarks:"DEAR SIR/MADAM, THIS TRAIN IS RUNNING IN KHARAGPUR DIVISION, SOUTH EASTERN RAILWAY, NOT IN HOWRAH DIVISION. PLEASE LODGE YOUR COMPLAINT IN KGP DIVISION, SER.",contactId:"9000000016",userId:"chg_er_hwh"},
+{complaintRefNo:"2026060410522",createdOn:"04-06-26 19:23",modifiedOn:"04-06-26 19:27",complaintMode:"T",trainStation:"20872",channelType:"M",compTypeName:"Punctuality",subTypeName:"Late Running",ownZoneCode:"SE",deptCode:"CHG",sla:"No",rating:"",status:"Closed",diff:"0:4",ownDivCode:"KGP",coachType:"CC",coachNo:"49",trainNameForReport:"ROU-HWH VANDE BHARAT EXP",complaintDesc:"Vande Bharat from Kharagpur to Howrah has not arrived and I received no delay notification. I will miss my connecting train from Howrah to Patna.",remarks:"THIS TRAIN IS RUNNING IN KHARAGPUR DIVISION, SER. PLEASE LODGE YOUR COMPLAINT IN KGP DIVISION FOR BETTER RESOLUTION.",contactId:"9000000017",userId:"chg_er_hwh"},
+{complaintRefNo:"2026060410071",createdOn:"04-06-26 18:50",modifiedOn:"04-06-26 18:58",complaintMode:"T",trainStation:"38435",channelType:"R",compTypeName:"Punctuality",subTypeName:"Late Running",ownZoneCode:"SE",deptCode:"CHG",sla:"No",rating:"",status:"Closed",diff:"0:7",ownDivCode:"KGP",trainNameForReport:"HWH PKU LOCAL [SUBURBAN]",complaintDesc:"The train is already delayed by more than 60 minutes and waiting for signal near Birshibpur for the last 20 minutes.",remarks:"THIS TRAIN IS RUNNING IN KHARAGPUR DIVISION, SER. PLEASE LODGE YOUR COMPLAINT IN KGP DIVISION.",contactId:"9000000018",userId:"chg_er_hwh"},
+{complaintRefNo:"2026060410486",createdOn:"04-06-26 19:21",modifiedOn:"04-06-26 19:33",complaintMode:"T",trainStation:"63064",channelType:"R",compTypeName:"Miscellaneous",subTypeName:"Miscellaneous",ownZoneCode:"ER",deptCode:"CHG",sla:"No",rating:"Unsatisfactory",status:"Closed",diff:"0:12",ownDivCode:"ASN",forwarded:"2",trainNameForReport:"SBG-BWN MEMU PGR [MEMU]",complaintDesc:"After SMs of Nalhati and Murarai, now SM of Sainthia also holds 63064 at Sainthia outer without any valid reason, intentionally, in the same day.",remarks:"Delay due to congestion in the section. Forwarded to concerned authority.",contactId:"9000000019",userId:"chg_er_hwh"},
+{complaintRefNo:"2026060409179",createdOn:"04-06-26 17:36",modifiedOn:"04-06-26 18:16",complaintMode:"T",trainStation:"63509",channelType:"M",compTypeName:"Punctuality",subTypeName:"Late Running",ownZoneCode:"ER",deptCode:"CHG",sla:"No",rating:"",status:"Closed",diff:"0:39",ownDivCode:"ASN",trainNameForReport:"BWN-JAJ MEMU [MEMU]",complaintDesc:"All local trains between Asansol-Barddhaman are late by more than 1 hour daily. As a student my exam is going on; sometimes it feels like I will not reach the centre.",remarks:"We deeply regret the inconvenience. Every possible action will be taken to improve punctuality of this train.",contactId:"9000000020",userId:"chg_er_hwh"},
+{complaintRefNo:"2026060409239",createdOn:"04-06-26 17:41",modifiedOn:"04-06-26 18:31",complaintMode:"T",trainStation:"13021",channelType:"H",compTypeName:"Security",subTypeName:"Unauthorized person in Ladies/Disabled Coach/SLR/Reserve Coach",ownZoneCode:"ER",deptCode:"CML",sla:"No",rating:"Excellent",status:"Closed",diff:"0:50",ownDivCode:"HWH",forwarded:"1",coachType:"SL",coachNo:"43",trainNameForReport:"HWH RXL MITHILA EXP",complaintDesc:"Unauthorized person in the SLR Coach.",remarks:"On duty BIC/TC/BWN informed to attend the said coach. RPF assistance will be provided to clear unauthorized passenger.",contactId:"9000000021",userId:"cml_er_hwh"},
+{complaintRefNo:"2026060408924",createdOn:"04-06-26 17:12",modifiedOn:"04-06-26 18:35",complaintMode:"T",trainStation:"05095",channelType:"H",compTypeName:"Electrical Equipment",subTypeName:"AC - More cooling",ownZoneCode:"NE",deptCode:"CHG",sla:"No",rating:"",status:"Closed",diff:"1:23",ownDivCode:"BSB",forwarded:"1",coachType:"2A",coachNo:"43",trainNameForReport:"KOAA-MAU SPL TOD",complaintDesc:"The AC in my coach is not cooling enough, making the environment uncomfortable.",remarks:"We regret the inconvenience. The issue has been forwarded to the concerned authorities for immediate action.",contactId:"9000000022",userId:"chg_er_hwh"},
+{complaintRefNo:"2026060409036",createdOn:"04-06-26 17:23",modifiedOn:"04-06-26 18:34",complaintMode:"T",trainStation:"05095",channelType:"H",compTypeName:"Electrical Equipment",subTypeName:"AC not working",ownZoneCode:"NE",deptCode:"CHG",sla:"No",rating:"",status:"Closed",diff:"1:11",ownDivCode:"BSB",forwarded:"1",coachType:"2A",coachNo:"20",trainNameForReport:"KOAA-MAU SPL TOD",complaintDesc:"The air conditioning in the coach is not providing cooling.",remarks:"We regret the inconvenience. The issue has been forwarded to the concerned authorities for immediate action.",contactId:"9000000023",userId:"chg_er_hwh"},
+{complaintRefNo:"2026060408741",createdOn:"04-06-26 16:57",modifiedOn:"04-06-26 18:00",complaintMode:"S",trainStation:"ADST",channelType:"W",compTypeName:"Water Availability",subTypeName:"Drinking Water at Platform",ownZoneCode:"ER",deptCode:"ENG",sla:"SLA 1",rating:"",status:"Closed",diff:"1:2",ownDivCode:"HWH",complaintDesc:"Water is coming dirty, not at all drinkable, moreover it is completely hot water.",remarks:"Your grievance is noted & informed to concerned authority. Thank You.",contactId:"9000000024",userId:"eng_er_hwh"},
+{complaintRefNo:"2026060407991",createdOn:"04-06-26 15:55",modifiedOn:"04-06-26 18:03",complaintMode:"S",trainStation:"BWN",channelType:"R",compTypeName:"Water Availability",subTypeName:"Toilet",ownZoneCode:"ER",deptCode:"ENG",sla:"SLA 1",rating:"",status:"Closed",diff:"2:8",ownDivCode:"HWH",complaintDesc:"No water in wash basin.",remarks:"Your grievance is noted & informed to concerned authority. Thank You.",contactId:"9000000025",userId:"eng_er_hwh"},
+{complaintRefNo:"2026060410538",createdOn:"04-06-26 19:24",modifiedOn:"04-06-26 20:03",complaintMode:"S",trainStation:"PKR",channelType:"A",compTypeName:"Electrical Equipment",subTypeName:"Lifts / Escalators",ownZoneCode:"ER",deptCode:"ELE",sla:"No",rating:"Unsatisfactory",status:"Closed",diff:"0:38",ownDivCode:"HWH",complaintDesc:"Escalator not working any day.",remarks:"Due to stop switch off by unknown passenger and now Escalator running.",contactId:"9000000026",userId:"ele_er_hwh"},
+{complaintRefNo:"2026060411688",createdOn:"04-06-26 20:47",modifiedOn:"04-06-26 21:55",complaintMode:"S",trainStation:"HWH",channelType:"R",compTypeName:"Cleanliness",subTypeName:"Station Entrance / Building",ownZoneCode:"ER",deptCode:"CHG",sla:"SLA 1",rating:"",status:"Closed",diff:"1:8",ownDivCode:"HWH",forwarded:"1",complaintDesc:"Howrah and Esplanade green line metro station permanent stairs are dirty, not cleaned everyday. Rooftop floor after Gate C is very dirty — food packets and used paper tickets.",remarks:"We regret the inconvenience. The issue has been forwarded to the concerned authorities for immediate action.",contactId:"9000000027",userId:"chg_er_hwh"},
+{complaintRefNo:"2026060412009",createdOn:"04-06-26 21:11",modifiedOn:"04-06-26 21:16",complaintMode:"S",trainStation:"HWH",channelType:"R",compTypeName:"Unreserved Ticketing",subTypeName:"Others",ownZoneCode:"ER",deptCode:"CML",sla:"No",rating:"Unsatisfactory",status:"Closed",diff:"0:5",ownDivCode:"HWH",feedbackRemark:"No action taken",complaintDesc:"Why has QR booking been disabled at Howrah Station? It is causing extreme inconvenience at such a busy station.",remarks:"Static QR based UTS ticketing is disabled. Thank you for using RailMadad.",contactId:"9000000028",userId:"cml_er_hwh"},
+{complaintRefNo:"2026060207070x",createdOn:"02-06-26 07:07",modifiedOn:"02-06-26 07:16",complaintMode:"S",trainStation:"HWH",channelType:"R",compTypeName:"Commercial",subTypeName:"Pay & Use Toilet",ownZoneCode:"ER",deptCode:"CML",sla:"No",rating:"Excellent",status:"Closed",diff:"0:9",ownDivCode:"HWH",complaintDesc:"At Pay & Use toilet PF 12, ₹25 was charged and the receipt was refused. The staff misbehaved when I asked for the displayed rate.",remarks:"Enquiry being conducted; ATR to follow.",contactId:"9000000029",userId:"cml_er_hwh"},
+{complaintRefNo:"2026053101828x",createdOn:"31-05-26 12:10",modifiedOn:"31-05-26 13:02",complaintMode:"S",trainStation:"HWH",channelType:"R",compTypeName:"Commercial",subTypeName:"Pay & Use Toilet",ownZoneCode:"ER",deptCode:"CML",sla:"No",rating:"",status:"Closed",diff:"0:52",ownDivCode:"HWH",complaintDesc:"Pay & Use toilet PF 2 charged ₹20 where the displayed rate is ₹10. Overcharging.",remarks:"Complainant not reachable; enquiry/ATR to follow.",contactId:"9000000030",userId:"cml_er_hwh"},
+{complaintRefNo:"2026060300436x",createdOn:"03-06-26 09:30",modifiedOn:"03-06-26 10:03",complaintMode:"S",trainStation:"HWH",channelType:"W",compTypeName:"Commercial",subTypeName:"Catering / Water",ownZoneCode:"ER",deptCode:"CML",sla:"No",rating:"",status:"Closed",diff:"0:33",ownDivCode:"HWH",complaintDesc:"Vendor at PF 23 sold Rail Neer at ₹20 instead of MRP ₹15. Overcharging openly.",remarks:"Enquiry being conducted; ATR to follow; no final penalty recorded.",contactId:"9000000031",userId:"cml_er_hwh"},
+{complaintRefNo:"2026060209829x",createdOn:"02-06-26 11:15",modifiedOn:"02-06-26 11:19",complaintMode:"S",trainStation:"TAK",channelType:"W",compTypeName:"Commercial",subTypeName:"Catering / Water",ownZoneCode:"ER",deptCode:"CML",sla:"No",rating:"",status:"Closed",diff:"0:4",ownDivCode:"HWH",complaintDesc:"Rail Neer not available at PF 1 stall; local brand water sold at ₹20.",remarks:"Matter inquired.",contactId:"9000000032",userId:"cml_er_hwh"},
+{complaintRefNo:"2026060213300x",createdOn:"02-06-26 16:05",modifiedOn:"02-06-26 16:27",complaintMode:"S",trainStation:"BZLE",channelType:"R",compTypeName:"Commercial",subTypeName:"Reserved Ticketing",ownZoneCode:"ER",deptCode:"CML",sla:"No",rating:"",status:"Closed",diff:"0:22",ownDivCode:"HWH",complaintDesc:"Alleged black-ticketing and partiality at the Tatkal counter; staff not attending the counter.",remarks:"Escalated to higher officials.",contactId:"9000000033",userId:"cml_er_hwh"},
+{complaintRefNo:"2026060212063x",createdOn:"02-06-26 14:20",modifiedOn:"02-06-26 15:30",complaintMode:"T",trainStation:"13052",channelType:"H",compTypeName:"Commercial",subTypeName:"Excess Fare / Fine",ownZoneCode:"ER",deptCode:"CML",sla:"No",rating:"Excellent",status:"Closed",diff:"1:10",ownDivCode:"HWH",coachType:"SL",coachNo:"30",trainNameForReport:"KLK HWH NETAJI EXP",complaintDesc:"TTE took ₹1000 from me despite valid tickets of my children. No proper receipt was given.",remarks:"Acted as per guidelines.",contactId:"9000000034",userId:"cml_er_hwh"},
+{complaintRefNo:"2026060401141x",createdOn:"04-06-26 09:11",modifiedOn:"04-06-26 09:37",complaintMode:"T",trainStation:"13024",channelType:"H",compTypeName:"Security",subTypeName:"Theft of Passengers Belongings/Snatching",ownZoneCode:"ER",deptCode:"RPF",sla:"No",rating:"",status:"Closed",diff:"0:26",ownDivCode:"HWH",forwarded:"2",coachType:"3A",coachNo:"6",trainNameForReport:"GAYA-HWH EXP",complaintDesc:"High-value bag containing a MacBook missing on arrival at Howrah PF 6.",remarks:"Forwarded to RPF/SRP/CIB; FIR intended.",contactId:"9000000035",userId:"rpf_er_hwh"},
+{complaintRefNo:"2026060308259x",createdOn:"03-06-26 19:40",modifiedOn:"03-06-26 20:47",complaintMode:"S",trainStation:"SHE",channelType:"R",compTypeName:"Security",subTypeName:"Others",ownZoneCode:"ER",deptCode:"RPF",sla:"No",rating:"",status:"Closed",diff:"1:7",ownDivCode:"HWH",forwarded:"1",complaintDesc:"Lady passenger alleged misbehaviour and physical assault at the counter; CCTV is available and should be checked.",remarks:"Enquiry being conducted; ATR to follow.",contactId:"9000000036",userId:"rpf_er_hwh"},
+{complaintRefNo:"2026060410275",createdOn:"04-06-26 19:05",modifiedOn:"04-06-26 19:18",complaintMode:"T",trainStation:"12348",channelType:"H",compTypeName:"Security",subTypeName:"Unauthorized person in Ladies/Disabled Coach/SLR/Reserve Coach",ownZoneCode:"ER",deptCode:"RPF",sla:"No",rating:"Excellent",status:"Closed",diff:"0:12",ownDivCode:"HWH",feedbackRemark:"Thank you",trainNameForReport:"RPH HWH SHAHID EXPRESS",complaintDesc:"A male passenger in the ladies coach of Train 12348.",remarks:"Forwarded to RPF officials of Chandanpur for necessary action.",contactId:"9000000037",userId:"rpf_er_hwh"},
+{complaintRefNo:"2026060410307",createdOn:"04-06-26 19:08",modifiedOn:"04-06-26 19:35",complaintMode:"T",trainStation:"37843",channelType:"M",compTypeName:"Coach - Cleanliness",subTypeName:"Coach Interior",ownZoneCode:"ER",deptCode:"ELE",sla:"No",rating:"",status:"Closed",diff:"0:27",ownDivCode:"HWH",forwarded:"1",trainNameForReport:"HWH - BWN LOCAL [SUBURBAN]",complaintDesc:"Need immediate cleaning of the dirty/defecated coach in train 37843 HWH to BWN 5:55PM, waiting to leave Howrah.",remarks:"Sorry for the inconvenience, it will be cleaned as soon as possible.",contactId:"9000000038",userId:"ele_er_hwh"},
+{complaintRefNo:"2026060409074",createdOn:"04-06-26 17:26",modifiedOn:"04-06-26 17:54",complaintMode:"T",trainStation:"12827",channelType:"R",compTypeName:"Refunds",subTypeName:"Refund of fare",ownZoneCode:"SE",deptCode:"CML",sla:"No",rating:"",status:"Closed",diff:"0:27",ownDivCode:"RNC",coachType:"CC",coachNo:"25",trainNameForReport:"HWH-PRR SUPERFAST EXP",complaintDesc:"Train delayed by two hours, no text notification. Travelling with a three-year-old child in the heat. Claiming a refund for all three tickets.",remarks:"We regret the inconvenience caused due to the delay of the train.",contactId:"9000000039",userId:"cml_er_hwh"},
+{complaintRefNo:"2026060410577",createdOn:"04-06-26 19:27",modifiedOn:"04-06-26 19:34",complaintMode:"T",trainStation:"37925",channelType:"R",compTypeName:"Punctuality",subTypeName:"Late Running",ownZoneCode:"ER",deptCode:"CHG",sla:"No",rating:"",status:"Closed",diff:"0:7",ownDivCode:"HWH",trainNameForReport:"HWH - KATWA LOCAL [SUBURBAN]",complaintDesc:"Every day the 7:25 pm Katwa local departs Howrah 10–15 minutes late without any reason.",remarks:"Late running due to heavy congestion in the section. Forwarded to concerned authority.",contactId:"9000000040",userId:"chg_er_hwh"},
+{complaintRefNo:"2026060409422",createdOn:"04-06-26 17:57",modifiedOn:"04-06-26 18:26",complaintMode:"S",trainStation:"UPA",channelType:"A",compTypeName:"Cleanliness",subTypeName:"Platform",ownZoneCode:"ER",deptCode:"CHG",sla:"No",rating:"Satisfactory",status:"Closed",diff:"0:29",ownDivCode:"HWH",forwarded:"1",feedbackRemark:"Please do it as soon as possible",complaintDesc:"Install dustbin.",remarks:"We regret the inconvenience. The issue has been forwarded for cleanliness.",contactId:"9000000041",userId:"chg_er_hwh"},
+{complaintRefNo:"2026060410545",createdOn:"04-06-26 19:25",modifiedOn:"04-06-26 19:35",complaintMode:"T",trainStation:"13011",channelType:"W",compTypeName:"Punctuality",subTypeName:"Late Running",ownZoneCode:"ER",deptCode:"CHG",sla:"No",rating:"",status:"Closed",diff:"0:10",ownDivCode:"HWH",coachType:"2S",coachNo:"55",trainNameForReport:"HWH MLDT INTERCITY EXP",complaintDesc:"Late running like a sloth. Please correct as per schedule.",remarks:"Late running due to heavy congestion in the section. Forwarded to concerned authority.",contactId:"9000000042",userId:"chg_er_hwh"},
+{complaintRefNo:"2026060409209",createdOn:"04-06-26 17:38",modifiedOn:"04-06-26 18:40",complaintMode:"T",trainStation:"13009",channelType:"H",compTypeName:"Electrical Equipment",subTypeName:"Fans",ownZoneCode:"ER",deptCode:"ELE",sla:"No",rating:"",status:"Closed",diff:"1:1",ownDivCode:"HWH",trainNameForReport:"HWH YNRK DOON EXP",complaintDesc:"Fans are not working.",remarks:"Escorting staff attended and found net 01 not working. Changed net 2. Issue solved.",contactId:"9000000043",userId:"ele_er_hwh"},
+{complaintRefNo:"2026060409021",createdOn:"04-06-26 17:21",modifiedOn:"04-06-26 18:35",complaintMode:"S",trainStation:"MRR",channelType:"R",compTypeName:"Miscellaneous",subTypeName:"Miscellaneous",ownZoneCode:"ER",deptCode:"CHG",sla:"No",rating:"",status:"Closed",diff:"1:13",ownDivCode:"HWH",forwarded:"1",complaintDesc:"Station master of Murarai intentionally holds 63064 without any valid reason.",remarks:"We regret the inconvenience. The issue has been forwarded to the concerned authorities for immediate action.",contactId:"9000000019",userId:"chg_er_hwh"},
+{complaintRefNo:"2026053015590x",createdOn:"30-05-26 18:22",modifiedOn:"30-05-26 19:01",complaintMode:"T",trainStation:"12321",channelType:"A",compTypeName:"Bed Roll",subTypeName:"Others",ownZoneCode:"ER",deptCode:"CNW",sla:"No",rating:"Satisfactory",status:"Closed",diff:"0:39",ownDivCode:"HWH",coachType:"2A",coachNo:"12",trainNameForReport:"HWH-CSMT MAIL [MAIL EXPRESS]",complaintDesc:"Bedroll not provided after boarding at a wayside station.",remarks:"Linen attendant provided bedroll. Passenger confirmed.",contactId:"9000000044",userId:"cnw_er_hwh"},
+{complaintRefNo:"2026053018880x",createdOn:"30-05-26 21:05",modifiedOn:"30-05-26 21:40",complaintMode:"T",trainStation:"12345",channelType:"R",compTypeName:"Coach - Cleanliness",subTypeName:"Cockroach / Rodents",ownZoneCode:"ER",deptCode:"CNW",sla:"No",rating:"Unsatisfactory",status:"Closed",diff:"0:35",ownDivCode:"HWH",coachType:"3A",coachNo:"22",feedbackRemark:"Problem still there",trainNameForReport:"HWH GHY SARAIGHAT EXPRESS",complaintDesc:"Cockroaches all over the coach interior, very unhygienic.",remarks:"OBHS staff attended; pest control to be intimated.",contactId:"9000000045",userId:"cnw_er_hwh"}
+];
+
+buildNav();
+loadSampleData();
+</script>
+</body>
+</html>
